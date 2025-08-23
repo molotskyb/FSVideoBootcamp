@@ -3,8 +3,13 @@ export type DrmConfig = {
 	playready?: string; // license URL
 	headers?: Record<string, string>; // license request headers
 };
+
 export interface PlayerAdapter {
-	init(video: HTMLVideoElement, drm?: DrmConfig): Promise<void>;
+	init(
+		video: HTMLVideoElement,
+		drm?: DrmConfig,
+		options?: { lowLatencyEnabled?: boolean }
+	): Promise<void>;
 	load(url: string): Promise<void>;
 	setPlaybackRate(rate: number): void;
 	destroy(): Promise<void>;
@@ -12,4 +17,9 @@ export interface PlayerAdapter {
 		event: "bitrateChanged" | "error" | "playing" | "paused",
 		cb: (data: any) => void
 	): void;
+	off?(
+		event: "bitrateChanged" | "error" | "playing" | "paused",
+		cb: (data: any) => void
+	): void;
+	getNative?(): any;
 }

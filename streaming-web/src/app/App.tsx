@@ -24,10 +24,11 @@ export default function App() {
 					alt="Logo"
 					style={{
 						display: "block",
-						margin: "32px auto 16px auto",
+						margin: "32px 0 16px 0",
 						maxWidth: "180px",
 						width: "40vw",
 						height: "auto",
+						alignSelf: "start",
 					}}
 				/>
 				<h1 style={{ textAlign: "center" }}>Dash Player Seed</h1>

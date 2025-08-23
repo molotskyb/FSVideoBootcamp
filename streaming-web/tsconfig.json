@@ -6,6 +6,8 @@
 	],
 	"compilerOptions": {
 		"resolveJsonModule": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"noImplicitAny": false, // Allow implicit 'any' types
+		"strict": false
 	}
 }
