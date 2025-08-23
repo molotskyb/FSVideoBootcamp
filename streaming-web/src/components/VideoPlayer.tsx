@@ -1,7 +1,9 @@
 import { useRef } from "react";
 import { useDashPlayer } from "../hooks/useDashPlayer";
+import { useMetrics } from "../hooks/useMetrics";
 import MetricsOverlay from "./MetricsOverlay";
 import ErrorBanner from "./ErrorBanner";
+import "./videoFrame.css"; // ⬅️ new CSS file below
 
 type Props = {
 	mpdUrl: string;
@@ -13,23 +15,24 @@ type Props = {
 };
 
 export default function VideoPlayer({ mpdUrl, drm }: Props) {
-	const { videoRef } = useDashPlayer(mpdUrl, drm);
-	const outer = useRef<HTMLDivElement | null>(null);
+	const { videoRef, player, error } = useDashPlayer(mpdUrl, drm);
+	const metrics = useMetrics(player);
+
+	const outerRef = useRef<HTMLDivElement | null>(null);
+
 	return (
-		<div ref={outer} style={{ position: "relative" }}>
-			<video
-				ref={videoRef}
-				controls
-				playsInline
-				style={{
-					width: "100%",
-					background: "#000",
-					height: "56.25vw",
-					maxHeight: "65vh",
-				}}
-			/>
-			<MetricsOverlay />
-			<ErrorBanner />
+		<div ref={outerRef} className="vf-frame">
+			<video ref={videoRef} className="vf-video" controls playsInline />
+			{player && (
+				<MetricsOverlay
+					metrics={metrics}
+					info={{
+						url: mpdUrl,
+						drm: { widevine: !!drm?.widevine, playready: !!drm?.playready },
+					}}
+				/>
+			)}
+			{error && <ErrorBanner message={String(error)} />}
 		</div>
 	);
 }
