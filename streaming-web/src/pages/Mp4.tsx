@@ -1,16 +1,16 @@
 import VideoPlayer from "../components/VideoPlayer";
+import { ENV } from "../config/env";
 
 export default function Mp4() {
+	const src = ENV.MP4; // override via VITE_MP4 if you want
 	return (
 		<>
 			<h2>Progressive MP4</h2>
-			<VideoPlayer
-				mpdUrl={"https://storage.googleapis.com/shaka-demo-assets/angel-one-hls/hls.m3u8".replace(
-					".m3u8",
-					".mp4"
-				)}
-			/>
-			<p>Note: our wrapper has a bypass to play .mp4 directly (no MSE).</p>
+			<VideoPlayer mpdUrl={src} />
+			<p style={{ opacity: 0.7, wordBreak: "break-all" }}>Source: {src}</p>
+			<p>
+				Note: our wrapper bypasses dash.js for .mp4 (native playback, no MSE).
+			</p>
 		</>
 	);
 }

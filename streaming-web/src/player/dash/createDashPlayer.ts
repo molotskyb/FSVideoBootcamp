@@ -50,7 +50,18 @@ export function createDashPlayer(): PlayerAdapter {
 		},
 
 		async load(url: string) {
-			if (!p) throw new Error("init() first");
+			if (!p || !v) throw new Error("init() first");
+			if (/\.mp4($|\?)/i.test(url)) {
+				// Detach dash/MSE and play progressively
+				try {
+					p.reset();
+				} catch {
+					// intentionally ignore errors during reset
+				}
+				v.src = url;
+				// Let user gesture start playback if autoplay is blocked
+				return;
+			}
 			p.attachSource(url);
 		},
 
