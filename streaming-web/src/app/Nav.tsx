@@ -5,9 +5,9 @@ const base = {
 	padding: "6px 10px",
 	borderRadius: 6,
 	textDecoration: "none",
-	color: "inherit",
+	color: "black",
 } as const;
-const active = { background: "rgba(255,255,255,.1)" } as const;
+const active = { background: "rgba(0, 255, 153, 0.37)" } as const;
 
 export default function Nav() {
 	const tabs = [

@@ -32,13 +32,19 @@ body {
 	min-height: 100vh;
 }
 
+/* Global video styling */
+video {
+	border: 5px solid #00000064;
+	box-sizing: border-box; /* keep border inside width/height */
+}
+
 h1 {
 	font-size: 3.2em;
 	line-height: 1.1;
 }
 
 button {
-	border-radius: 8px;
+	border-radius: 100vhpx;
 	border: 1px solid transparent;
 	padding: 0.6em 1.2em;
 	font-size: 1em;

@@ -108,7 +108,7 @@ export default function HLSFairPlayPlayer({ src, fps }: Props) {
 			ref={ref}
 			controls
 			playsInline
-			style={{ width: "100%", background: "#000", aspectRatio: "16/9" }}
+			style={{ width: 960, background: "#000", aspectRatio: "16/9", display: "block", margin: "0 auto" }}
 		/>
 	);
 }
