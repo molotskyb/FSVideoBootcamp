@@ -1,7 +1,7 @@
 // src/app/App.tsx
 import { RouterProvider } from "react-router-dom";
-import { PlayerProvider } from "../state/playerStore";
 import { router } from "./routes";
+import { PlayerProvider } from "../state/playerStore";
 
 export default function App() {
 	return (

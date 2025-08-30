@@ -1,9 +1,10 @@
+// src/components/HLSVideoPlayer.tsx
 import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 
 type Props = { src: string };
 
-export default function HlsVideoPlayer({ src }: Props) {
+export default function HLSVideoPlayer({ src }: Props) {
 	const ref = useRef<HTMLVideoElement | null>(null);
 
 	useEffect(() => {
@@ -11,7 +12,7 @@ export default function HlsVideoPlayer({ src }: Props) {
 		if (!video) return;
 
 		if (video.canPlayType("application/vnd.apple.mpegurl")) {
-			video.src = src; // Safari
+			video.src = src; // Safari/iOS native HLS
 			return;
 		}
 
@@ -22,8 +23,7 @@ export default function HlsVideoPlayer({ src }: Props) {
 			return () => hls.destroy();
 		}
 
-		// Fallback
-		video.src = src;
+		video.src = src; // ancient fallback
 	}, [src]);
 
 	return (

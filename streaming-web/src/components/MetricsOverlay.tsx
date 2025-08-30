@@ -1,34 +1,22 @@
-import { useMemo } from "react";
+// src/components/MetricsOverlay.tsx
 import { usePlayerStore } from "../state/usePlayerStore";
 import { fmtKbps } from "../utils/format";
 
-export type Metrics = {
+type Metrics = {
 	bitrateKbps: number;
-	resolution: string; // e.g., "1920x1080"
+	resolution: string;
 	stalls: number;
 	droppedFrames: number;
 };
-
 type Props = {
 	metrics?: Metrics;
-	info?: {
-		url?: string;
-		drm?: { widevine?: boolean; playready?: boolean };
-	};
+	info?: { url?: string; drm?: { widevine?: boolean; playready?: boolean } };
 };
 
 export default function MetricsOverlay({ metrics, info }: Props) {
 	const { bitrateKbps: sBR, height: sH } = usePlayerStore();
-
-	const parsed = useMemo(() => {
-		const [w, h] = (metrics?.resolution ?? "")
-			.split("x")
-			.map((n) => Number(n) || undefined);
-		return { w, h };
-	}, [metrics?.resolution]);
-
-	const displayBR = metrics?.bitrateKbps ?? sBR ?? 0;
-	const displayH = parsed.h ?? sH ?? undefined;
+	const res = metrics?.resolution ?? (sH ? `?x${sH}` : "—");
+	const br = metrics?.bitrateKbps ?? sBR ?? 0;
 
 	return (
 		<div
@@ -41,39 +29,22 @@ export default function MetricsOverlay({ metrics, info }: Props) {
 				borderRadius: 8,
 				color: "#fff",
 				fontFamily: "monospace",
-				lineHeight: 1.35,
 				fontSize: 12,
+				lineHeight: 1.35,
 				pointerEvents: "none",
 				minWidth: 180,
 			}}
 		>
-			<div>BR: {fmtKbps(displayBR)} kb/s</div>
-			<div>
-				Res: {metrics?.resolution ?? (displayH ? `?x${displayH}` : "—")}
-			</div>
+			<div>BR: {fmtKbps(br)} kb/s</div>
+			<div>Res: {res}</div>
 			<div>Stalls: {metrics?.stalls ?? 0}</div>
 			<div>DropFrames: {metrics?.droppedFrames ?? 0}</div>
-
 			{info && (
-				<>
-					<div style={{ opacity: 0.8, marginTop: 6 }}>
-						DRM: {info.drm?.widevine ? "WV" : ""}
-						{info.drm?.playready ? " PR" : ""}
-						{!info.drm?.widevine && !info.drm?.playready ? "none" : ""}
-					</div>
-					<div
-						title={info.url}
-						style={{
-							opacity: 0.8,
-							maxWidth: 260,
-							whiteSpace: "nowrap",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-						}}
-					>
-						Src: {info.url ?? "—"}
-					</div>
-				</>
+				<div style={{ opacity: 0.8, marginTop: 6 }}>
+					DRM: {info.drm?.widevine ? "WV " : ""}
+					{info.drm?.playready ? "PR" : ""}
+					{!info.drm?.widevine && !info.drm?.playready ? "none" : ""}
+				</div>
 			)}
 		</div>
 	);

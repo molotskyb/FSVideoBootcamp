@@ -4,44 +4,56 @@ import type { PlayerAdapter, DrmConfig } from "../adapter";
 import { buildProtectionData } from "./drm";
 import { ev } from "./events";
 
-export function createDashPlayer(): PlayerAdapter {
+type InitOptions = { lowLatency?: boolean };
+
+export function createDashPlayer(): PlayerAdapter & {
+	getNative?: () => dashjs.MediaPlayerClass | null;
+} {
 	let p: dashjs.MediaPlayerClass | undefined;
 	let v: HTMLVideoElement | undefined;
 	const listeners: Record<string, Array<(d: any) => void>> = {};
-
-	const emit = (name: string, data: any) => {
+	const emit = (name: string, data: any) =>
 		(listeners[name] || []).forEach((cb) => cb(data));
-	};
 
-	// ---- native handlers we can remove later with `off`
 	const handleQualityEvent = () => {
 		if (!p) return;
-		const { bitrateKbps, height } = getCurrentVideoRep(p);
-		emit("bitrateChanged", { bitrateKbps, height });
+		const dm = p.getDashMetrics?.();
+		const da = p.getDashAdapter?.();
+		const si = (p as any).getActiveStream?.()?.getStreamInfo?.();
+		const period = si?.index ?? 0;
+		const rs = dm?.getCurrentRepresentationSwitch?.("video");
+		const rep =
+			rs && da?.getRepresentationFor
+				? da.getRepresentationFor("video", rs.to, period)
+				: undefined;
+		const kbps = rep?.bandwidth ? Math.round(rep.bandwidth / 1000) : 0;
+		emit("bitrateChanged", { bitrateKbps: kbps, height: rep?.height });
 	};
 	const handlePaused = () => emit("paused", {});
 	const handlePlaying = () => emit("playing", {});
 	const handleError = (e: any) => emit("error", normalizeError(e));
 
 	return {
-		async init(video: HTMLVideoElement, drm?: DrmConfig) {
+		async init(video: HTMLVideoElement, drm?: DrmConfig, opt?: InitOptions) {
 			v = video;
 			p = dashjs.MediaPlayer().create();
 			p.updateSettings({
 				streaming: {
 					abr: {
 						autoSwitchBitrate: { video: true },
-						initialBitrate: { video: 600 }, // kbps
+						initialBitrate: { video: 600 },
 					},
+					lowLatencyEnabled: !!opt?.lowLatency,
 				},
 				debug: { logLevel: dashjs.Debug.LOG_LEVEL_NONE },
 			});
 			p.initialize(video, undefined, false);
+			// Enable text by default for DASH captions lesson
+			(p as any).setTextDefaultEnabled?.(true);
 
 			const pd = buildProtectionData(drm);
 			if (pd) p.setProtectionData(pd);
 
-			// wire native events
 			p.on(ev.STREAM_INITIALIZED, handlePlaying);
 			p.on(ev.PLAYBACK_STARTED, handleQualityEvent);
 			p.on(ev.QUALITY_CHANGE_RENDERED, handleQualityEvent);
@@ -52,14 +64,10 @@ export function createDashPlayer(): PlayerAdapter {
 		async load(url: string) {
 			if (!p || !v) throw new Error("init() first");
 			if (/\.mp4($|\?)/i.test(url)) {
-				// Detach dash/MSE and play progressively
 				try {
 					p.reset();
-				} catch {
-					// intentionally ignore errors during reset
-				}
+				} catch {}
 				v.src = url;
-				// Let user gesture start playback if autoplay is blocked
 				return;
 			}
 			p.attachSource(url);
@@ -89,42 +97,16 @@ export function createDashPlayer(): PlayerAdapter {
 		on(event, cb) {
 			(listeners[event] ||= []).push(cb);
 		},
-
 		off(event, cb) {
-			const arr = listeners[event];
-			if (!arr) return;
-			const i = arr.indexOf(cb);
-			if (i >= 0) arr.splice(i, 1);
+			const a = listeners[event];
+			if (!a) return;
+			const i = a.indexOf(cb);
+			if (i >= 0) a.splice(i, 1);
 		},
-
-		// Optional escape hatch for metrics hooks
 		getNative() {
 			return p ?? null;
 		},
 	};
-}
-
-/** Read current Representation via DashMetrics + DashAdapter */
-function getCurrentVideoRep(p: dashjs.MediaPlayerClass): {
-	bitrateKbps: number;
-	height?: number;
-} {
-	try {
-		const dm = p.getDashMetrics?.();
-		const da = p.getDashAdapter?.();
-		const streamInfo = (p as any).getActiveStream?.()?.getStreamInfo?.();
-
-		const repSwitch = dm?.getCurrentRepresentationSwitch?.("video");
-		if (repSwitch && da?.getVoRepresentation) {
-			const reps = da.getVoRepresentation(streamInfo);
-			const rep = reps?.find((r: any) => r.id === repSwitch.to);
-			const bwKbps = rep?.bandwidth ? Math.round(rep.bandwidth / 1000) : 0; // bandwidth is bits/s
-			return { bitrateKbps: bwKbps, height: rep?.height };
-		}
-	} catch {
-		// ignore and return defaults
-	}
-	return { bitrateKbps: 0, height: undefined };
 }
 
 function normalizeError(e: any) {

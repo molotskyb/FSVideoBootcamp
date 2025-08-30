@@ -1,15 +1,13 @@
-import HlsVideoPlayer from "../components/HLSVideoPlayer";
+// src/pages/HlsClear.tsx
+import HLSVideoPlayer from "../components/HLSVideoPlayer";
 import { ENV } from "../config/env";
-
 export default function HlsClear() {
+	const src = ENV.CLEAR_HLS;
 	return (
 		<>
 			<h2>HLS — Clear</h2>
-			<HlsVideoPlayer
-				src={
-					ENV.CLEAR_HLS || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-				}
-			/>
+			<HLSVideoPlayer src={src} />
+			<p style={{ opacity: 0.7, wordBreak: "break-all" }}>Source: {src}</p>
 		</>
 	);
 }
