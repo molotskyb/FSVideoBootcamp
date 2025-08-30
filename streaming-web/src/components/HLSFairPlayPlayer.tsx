@@ -1,5 +1,8 @@
 // src/components/HLSFairPlayPlayer.tsx
 import { useEffect, useRef } from "react";
+import MetricsOverlay from "./MetricsOverlay";
+import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
+import "./videoFrame.css";
 
 type FPSConfig = {
 	certUrl: string;
@@ -30,6 +33,7 @@ type Props = { src: string; fps: FPSConfig };
 
 export default function HLSFairPlayPlayer({ src, fps }: Props) {
 	const ref = useRef<HTMLVideoElement | null>(null);
+	const metrics = useHtml5Metrics(ref, true);
 
 	useEffect(() => {
 		const video = ref.current!;
@@ -77,7 +81,9 @@ export default function HLSFairPlayPlayer({ src, fps }: Props) {
 					{
 						initDataTypes: ["skd"],
 						videoCapabilities: [
+							{ contentType: "video/mp4" },
 							{ contentType: 'video/mp4; codecs="avc1.42E01E"' },
+							{ contentType: 'video/mp4; codecs="avc1.4d401e"' },
 						],
 						distinctiveIdentifier: "optional",
 						persistentState: "optional",
@@ -91,24 +97,25 @@ export default function HLSFairPlayPlayer({ src, fps }: Props) {
 			const cert = new Uint8Array(await certRes.arrayBuffer());
 			await mediaKeys.setServerCertificate(cert);
 
-			video.src = src;
+			// Important: attach encrypted listener BEFORE setting src
 			video.addEventListener("encrypted", onEncrypted);
+			video.src = src;
 		})().catch(console.error);
 
 		return () => {
 			video.removeEventListener("encrypted", onEncrypted);
 			try {
 				session?.close();
-			} catch {}
+			} catch {
+				// Ignore errors when closing the session
+			}
 		};
 	}, [src, fps]);
 
 	return (
-		<video
-			ref={ref}
-			controls
-			playsInline
-			style={{ width: 960, background: "#000", aspectRatio: "16/9", display: "block", margin: "0 auto" }}
-		/>
+		<div className="vf-frame">
+			<video ref={ref} className="vf-video" controls playsInline />
+			<MetricsOverlay metrics={metrics} info={{ url: src }} />
+		</div>
 	);
 }

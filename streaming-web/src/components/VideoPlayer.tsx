@@ -1,5 +1,5 @@
 // src/components/VideoPlayer.tsx
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useDashPlayer } from "../hooks/useDashPlayer";
 import { useMetrics } from "../hooks/useMetrics";
 import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
@@ -80,7 +80,7 @@ export default function VideoPlayer({
 					drm: { widevine: !!drm?.widevine, playready: !!drm?.playready },
 				}}
 			/>
-			{error && <ErrorBanner message={String(error)} />}
+			{error ? <ErrorBanner message={String(error)} /> : null}
 		</div>
 	);
 }

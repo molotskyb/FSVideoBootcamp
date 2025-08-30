@@ -9,8 +9,6 @@ const HlsClear = React.lazy(() => import("../pages/HlsClear"));
 const HlsDrm = React.lazy(() => import("../pages/HlsDrm"));
 const Mp4 = React.lazy(() => import("../pages/Mp4"));
 const CaptionsDash = React.lazy(() => import("../pages/CaptionsDash"));
-const Metrics = React.lazy(() => import("../pages/Metrics"));
-const Errors = React.lazy(() => import("../pages/Errors"));
 
 const routes: RouteObject[] = [
 	{
@@ -27,8 +25,6 @@ const routes: RouteObject[] = [
 			{ path: "hls-drm", element: React.createElement(HlsDrm) },
 			{ path: "mp4", element: React.createElement(Mp4) },
 			{ path: "captions-dash", element: React.createElement(CaptionsDash) },
-			{ path: "metrics", element: React.createElement(Metrics) },
-			{ path: "errors", element: React.createElement(Errors) },
 		],
 	},
 ];

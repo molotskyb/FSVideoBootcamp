@@ -17,8 +17,6 @@ export default function Nav() {
 		["/hls-drm", "HLS DRM (FPS)"],
 		["/mp4", "MP4"],
 		["/captions-dash", "DASH Captions"],
-		["/metrics", "Metrics"],
-		["/errors", "Errors"],
 	] as const;
 
 	return (

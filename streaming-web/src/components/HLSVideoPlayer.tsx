@@ -1,11 +1,15 @@
 // src/components/HLSVideoPlayer.tsx
 import { useEffect, useRef } from "react";
+import MetricsOverlay from "./MetricsOverlay";
+import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
+import "./videoFrame.css";
 import Hls from "hls.js";
 
 type Props = { src: string };
 
 export default function HLSVideoPlayer({ src }: Props) {
 	const ref = useRef<HTMLVideoElement | null>(null);
+    const metrics = useHtml5Metrics(ref, true);
 
 	useEffect(() => {
 		const video = ref.current!;
@@ -27,11 +31,9 @@ export default function HLSVideoPlayer({ src }: Props) {
 	}, [src]);
 
 	return (
-		<video
-			ref={ref}
-			controls
-			playsInline
-			style={{ width: 960, background: "#000", aspectRatio: "16/9", display: "block", margin: "0 auto" }}
-		/>
+		<div className="vf-frame">
+			<video ref={ref} className="vf-video" controls playsInline />
+			<MetricsOverlay metrics={metrics} info={{ url: src }} />
+		</div>
 	);
 }
