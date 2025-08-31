@@ -13,10 +13,12 @@ export default function Nav() {
 	const tabs = [
 		["/dash-clear", "DASH (clear)"],
 		["/dash-drm", "DASH (DRM)"],
+		["/ll-dash", "LL-DASH"],
+		["/captions-dash", "DASH Captions"],
 		["/hls-clear", "HLS (clear)"],
 		["/hls-drm", "HLS DRM (FPS)"],
+		["/ll-hls", "LL-HLS"],
 		["/mp4", "MP4"],
-		["/captions-dash", "DASH Captions"],
 	] as const;
 
 	return (

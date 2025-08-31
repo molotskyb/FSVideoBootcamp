@@ -5,11 +5,14 @@ import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
 import "./videoFrame.css";
 import Hls from "hls.js";
 
-type Props = { src: string };
+type Props = {
+	src: string;
+	lowLatencyMode?: boolean;
+};
 
 export default function HLSVideoPlayer({ src }: Props) {
 	const ref = useRef<HTMLVideoElement | null>(null);
-    const metrics = useHtml5Metrics(ref, true);
+	const metrics = useHtml5Metrics(ref, true);
 
 	useEffect(() => {
 		const video = ref.current!;

@@ -25,6 +25,10 @@ export const ENV = {
 	WV: import.meta.env.VITE_WV || "https://cwip-shaka-proxy.appspot.com/no_auth",
 	PR: import.meta.env.VITE_PR || "",
 
+	// ✅ Low-Latency endpoints
+	LL_HLS: import.meta.env.VITE_LL_HLS || "",
+	LL_DASH: import.meta.env.VITE_LL_DASH || "",
+
 	// HLS DRM (FairPlay on Safari)
 	FPS_HLS: import.meta.env.VITE_FPS_HLS || "", // FPS-encrypted HLS master
 	FPS_CERT_URL: import.meta.env.VITE_FPS_CERT_URL || "", // server certificate endpoint
