@@ -1,5 +1,6 @@
 // src/components/VideoPlayer.tsx
 import { useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useDashPlayer } from "../hooks/useDashPlayer";
 import { useMetrics } from "../hooks/useMetrics";
 import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
@@ -24,8 +25,10 @@ type Props = {
 	};
 	tracks?: TextTrackSource[];
 	autoSelectFirstSubtitle?: boolean;
-	lowLatency?: boolean; // for LL-DASH if you add that lesson later
+	lowLatency?: boolean; // for LL-DASH
 };
+
+type LayoutCtx = { showMetrics: boolean };
 
 export default function VideoPlayer({
 	mpdUrl,
@@ -34,15 +37,32 @@ export default function VideoPlayer({
 	autoSelectFirstSubtitle,
 	lowLatency,
 }: Props) {
+	// Read <Outlet context>; default to true (teaching HUD always visible).
+	let showMetrics = true;
+	try {
+		const ctx = useOutletContext<LayoutCtx>();
+		if (typeof ctx?.showMetrics === "boolean") showMetrics = ctx.showMetrics;
+	} catch {
+		// Rendered outside router/Outlet (tests, storybook) — keep default true.
+	}
+
 	const { videoRef, player, error } = useDashPlayer(mpdUrl, drm, {
 		lowLatency,
 	});
+
+	// dash.js metrics (DASH path)
 	const dashMetrics = useMetrics(player);
+
+	// HTML5 metrics (MP4 or when no dash player attached)
 	const isMp4 = /\.mp4($|\?)/i.test(mpdUrl);
-	const html5Metrics = useHtml5Metrics(videoRef, isMp4 || !player);
+	const html5Metrics = useHtml5Metrics(
+		videoRef,
+		showMetrics && (isMp4 || !player) // poll only when overlay shown
+	);
+
 	const overlayMetrics = player ? dashMetrics : html5Metrics;
 
-	// Auto-show first subtitle track (works for MP4/side-loaded; DASH text is handled by dash.js)
+	// Auto-show first side-loaded subtitle track (MP4/native only; DASH text is handled by dash.js)
 	useEffect(() => {
 		if (!autoSelectFirstSubtitle || !videoRef.current) return;
 		const v = videoRef.current;
@@ -73,13 +93,16 @@ export default function VideoPlayer({
 				))}
 			</video>
 
-			<MetricsOverlay
-				metrics={overlayMetrics}
-				info={{
-					url: mpdUrl,
-					drm: { widevine: !!drm?.widevine, playready: !!drm?.playready },
-				}}
-			/>
+			{showMetrics && (
+				<MetricsOverlay
+					metrics={overlayMetrics}
+					info={{
+						url: mpdUrl,
+						drm: { widevine: !!drm?.widevine, playready: !!drm?.playready },
+					}}
+				/>
+			)}
+
 			{error ? <ErrorBanner message={String(error)} /> : null}
 		</div>
 	);

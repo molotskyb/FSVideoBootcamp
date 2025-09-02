@@ -1,8 +1,18 @@
 // src/app/Layout.tsx
 import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Nav from "./Nav";
 
 export default function Layout() {
+	const [showMetrics, setShowMetrics] = useState(true);
+
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key.toLowerCase() === "m") setShowMetrics((v) => !v);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, []);
 	return (
 		<>
 			<img
@@ -27,7 +37,7 @@ export default function Layout() {
 				>
 					<h1>Streaming Demos</h1>
 					<Nav />
-					<Outlet />
+					<Outlet context={{ showMetrics }} />
 				</div>
 			</div>
 		</>

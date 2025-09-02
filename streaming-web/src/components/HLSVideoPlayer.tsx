@@ -1,16 +1,28 @@
 // src/components/HLSVideoPlayer.tsx
 import { useEffect, useRef } from "react";
-import MetricsOverlay from "./MetricsOverlay";
-import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
-import "./videoFrame.css";
+import { useOutletContext } from "react-router-dom";
 import Hls from "hls.js";
+import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
+import MetricsOverlay from "./MetricsOverlay";
 
-type Props = {
+type Ctx = { showMetrics: boolean };
+
+export default function HLSVideoPlayer({
+	src,
+	lowLatencyMode,
+}: {
 	src: string;
 	lowLatencyMode?: boolean;
-};
+}) {
+	// ✅ safe read with default
+	let showMetrics = false;
+	try {
+		const ctx = useOutletContext<Ctx>();
+		showMetrics = !!ctx?.showMetrics;
+	} catch {
+		// rendered outside <Outlet> — keep default false
+	}
 
-export default function HLSVideoPlayer({ src }: Props) {
 	const ref = useRef<HTMLVideoElement | null>(null);
 	const metrics = useHtml5Metrics(ref, true);
 
@@ -19,24 +31,27 @@ export default function HLSVideoPlayer({ src }: Props) {
 		if (!video) return;
 
 		if (video.canPlayType("application/vnd.apple.mpegurl")) {
-			video.src = src; // Safari/iOS native HLS
+			video.src = src;
 			return;
 		}
-
 		if (Hls.isSupported()) {
-			const hls = new Hls({ lowLatencyMode: false });
+			const hls = new Hls({ lowLatencyMode: !!lowLatencyMode });
 			hls.loadSource(src);
 			hls.attachMedia(video);
 			return () => hls.destroy();
 		}
-
-		video.src = src; // ancient fallback
-	}, [src]);
+		video.src = src;
+	}, [src, lowLatencyMode]);
 
 	return (
-		<div className="vf-frame">
-			<video ref={ref} className="vf-video" controls playsInline />
-			<MetricsOverlay metrics={metrics} info={{ url: src }} />
+		<div style={{ position: "relative" }}>
+			<video
+				ref={ref}
+				controls
+				playsInline
+				style={{ width: "100%", background: "#000", aspectRatio: "16/9" }}
+			/>
+			{showMetrics && <MetricsOverlay metrics={metrics} />}
 		</div>
 	);
 }

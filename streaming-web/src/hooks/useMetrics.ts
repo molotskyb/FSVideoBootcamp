@@ -7,6 +7,9 @@ export type Metrics = {
 	resolution: string; // e.g. "1920x1080"
 	stalls: number;
 	droppedFrames: number;
+	qualityIndex?: number; // ABR index (0 = lowest)
+	bufferLevel?: number; // seconds buffered
+	latency?: number; // seconds behind live edge
 };
 
 export function useMetrics(player?: dashjs.MediaPlayerClass | null): Metrics {
@@ -20,8 +23,6 @@ export function useMetrics(player?: dashjs.MediaPlayerClass | null): Metrics {
 	useEffect(() => {
 		if (!player) return;
 
-		let mounted = true;
-
 		const compute = () => {
 			try {
 				const dm = player.getDashMetrics?.();
@@ -30,92 +31,105 @@ export function useMetrics(player?: dashjs.MediaPlayerClass | null): Metrics {
 				// dropped frames
 				const dropped = dm?.getCurrentDroppedFrames?.()?.droppedFrames ?? 0;
 
-				// figure out current Representation to read bandwidth/size
-				// 1) preferred: via current RepresentationSwitch + adapter
-				const repSwitch = dm?.getCurrentRepresentationSwitch?.("video");
-				const streamInfo = (
-					player as dashjs.MediaPlayerClass & {
-						getActiveStream?: () => {
-							getStreamInfo?: () => { index?: number };
-						};
+				// buffer / latency (optional)
+				const bufferLevel = dm?.getCurrentBufferLevel?.("video") ?? undefined;
+
+				const isLive =
+					(player as any).isDynamic?.() ??
+					(player as any).getActiveStream?.()?.getStreamInfo?.()?.manifestInfo
+						?.isDynamic ??
+					false;
+
+				let latency: number | undefined = undefined;
+				if (isLive) {
+					const dmAny = dm as any;
+					if (dmAny && typeof dmAny.getCurrentLiveLatency === "function") {
+						const l = dmAny.getCurrentLiveLatency();
+						latency = Number.isFinite(l) ? l : undefined;
 					}
-				)
+				}
+
+				// current representation info
+				const streamInfo = (player as any)
 					.getActiveStream?.()
 					?.getStreamInfo?.();
 				const periodIdx = streamInfo?.index ?? 0;
+				const repSwitch = dm?.getCurrentRepresentationSwitch?.("video"); // {to: repId}
 
 				let bandwidth: number | undefined;
 				let width: number | undefined;
 				let height: number | undefined;
 
-				if (repSwitch && da?.getVoRepresentation && da?.getMediaInfoForType) {
-					const mediaInfo = da.getMediaInfoForType(
-						{ index: periodIdx },
-						"video"
+				// Preferred (modern): adapter lookups by rep id
+				if (repSwitch && da) {
+					const rep = (da as any).getRepresentationFor?.(
+						"video",
+						(repSwitch as any).to,
+						periodIdx
 					);
-					let reps: Representation[] | undefined;
-					if (mediaInfo) {
-						reps = da.getVoRepresentation(mediaInfo);
+					if (rep) {
+						bandwidth = rep.bandwidth;
+						width = rep.width;
+						height = rep.height;
 					}
-					type Representation = {
-						id: string;
-						bandwidth?: number;
-						width?: number;
-						height?: number;
-					};
-					const rep = Array.isArray(reps)
-						? reps.find((r: Representation) => r.id === repSwitch.to)
-						: undefined;
-					bandwidth = rep?.bandwidth;
-					width = rep?.width;
-					height = rep?.height;
+					// Some typings expose helpers with different names; try bandwidth specifically:
+					if (!bandwidth && (da as any).getBandwidthForRepresentation) {
+						bandwidth = (da as any).getBandwidthForRepresentation(
+							(repSwitch as any).to,
+							periodIdx
+						);
+					}
 				}
 
-				// 2) fallback (older APIs or wrappers might have these):
-				interface LegacyPlayer {
+				// Legacy fallback
+				const legacy = player as unknown as {
+					getQualityFor?: (t: string) => number;
 					getBitrateInfoListFor?: (
-						type: string
+						t: string
 					) => Array<{ bitrate?: number; width?: number; height?: number }>;
-					getQualityFor?: (type: string) => number;
-				}
-				const legacyPlayer = player as dashjs.MediaPlayerClass & LegacyPlayer;
-				if (
-					!bandwidth &&
-					legacyPlayer.getBitrateInfoListFor &&
-					legacyPlayer.getQualityFor
-				) {
-					const q = legacyPlayer.getQualityFor("video");
-					const list = legacyPlayer.getBitrateInfoListFor("video");
-					const info = Array.isArray(list) ? list[q] : undefined;
-					bandwidth = info?.bitrate;
-					width = width ?? info?.width;
-					height = height ?? info?.height;
+				};
+
+				let qualityIndex: number | undefined;
+				if (typeof legacy.getQualityFor === "function") {
+					qualityIndex = legacy.getQualityFor("video");
+					if (
+						(!bandwidth || !width || !height) &&
+						typeof legacy.getBitrateInfoListFor === "function"
+					) {
+						const list = legacy.getBitrateInfoListFor("video");
+						const info = Array.isArray(list) ? list[qualityIndex] : undefined;
+						bandwidth = bandwidth ?? info?.bitrate;
+						width = width ?? info?.width;
+						height = height ?? info?.height;
+					}
 				}
 
-				// finalize
+				// Finalize with hard numeric defaults
 				const bitrateKbps = bandwidth ? Math.round(bandwidth / 1000) : 0;
-				const resolution =
-					width && height ? `${width}x${height}` : metrics.resolution || "-";
+				const resolution = width && height ? `${width}x${height}` : "-";
 
-				if (!mounted) return;
 				setMetrics((prev) => ({
 					...prev,
-					bitrateKbps,
-					resolution,
+					bitrateKbps, // ✅ always a number
+					resolution: resolution || prev.resolution || "-",
 					droppedFrames: dropped,
+					bufferLevel,
+					latency,
+					qualityIndex,
+					isLive,
 				}));
 			} catch {
-				/* ignore */
+				// ignore in demos
 			}
 		};
-
-		const intervalId: number = window.setInterval(compute, 1000);
 
 		const onQualityRendered = () => compute();
 		const onStalled = () =>
 			setMetrics((prev) => ({ ...prev, stalls: prev.stalls + 1 }));
 
-		// listen for changes that impact quality
+		compute();
+		const id = window.setInterval(compute, 1000);
+
 		player.on(
 			dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED,
 			onQualityRendered
@@ -124,13 +138,8 @@ export function useMetrics(player?: dashjs.MediaPlayerClass | null): Metrics {
 		player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, compute);
 		player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, compute);
 
-		// initial + periodic poll (for dropped frames etc.)
-		compute();
-		// intervalId is now declared as const above
-
 		return () => {
-			mounted = false;
-			window.clearInterval(intervalId);
+			window.clearInterval(id);
 			player.off(
 				dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED,
 				onQualityRendered
@@ -139,7 +148,6 @@ export function useMetrics(player?: dashjs.MediaPlayerClass | null): Metrics {
 			player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, compute);
 			player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, compute);
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [player]);
 
 	return metrics;
