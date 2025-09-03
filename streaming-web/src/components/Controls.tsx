@@ -8,12 +8,9 @@ export default function Controls({
 	};
 	const pip = async () => {
 		if (!video) return;
-		// @ts-ignore
 		if (document.pictureInPictureEnabled && !document.pictureInPictureElement) {
-			// @ts-ignore
 			await video.requestPictureInPicture();
 		} else {
-			// @ts-ignore
 			await document.exitPictureInPicture?.();
 		}
 	};

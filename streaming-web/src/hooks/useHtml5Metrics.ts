@@ -64,7 +64,6 @@ export function useHtml5Metrics(
 			let latency: number | undefined = undefined;
 			if (v.seekable?.length) {
 				const liveEdge = v.seekable.end(v.seekable.length - 1);
-				// Treat as live if liveEdge advances and duration is Infinity
 				if (v.duration === Infinity) isLive = true;
 				if (isLive) latency = Math.max(0, liveEdge - v.currentTime);
 			}

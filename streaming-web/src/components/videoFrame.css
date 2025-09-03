@@ -1,16 +1,18 @@
 /* src/components/videoFrame.css */
 .vf-frame {
 	position: relative;
-	width: 960px; /* fixed width */
-	aspect-ratio: 16/9; /* auto height = 540px */
+	width: 1280px;
+	aspect-ratio: 16/9;
 	background: #000;
 	border-radius: 6px;
 	overflow: hidden;
 	margin: 0 auto;
 }
+
 .vf-video {
-	width: 100%;
-	height: 100%;
-	object-fit: contain;
 	display: block;
+	width: 100%;
+	aspect-ratio: 16/9;
+	background: #000;
+	border-radius: 8px;
 }

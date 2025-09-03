@@ -7,9 +7,9 @@ type Metrics = {
 	resolution: string;
 	stalls: number;
 	droppedFrames: number;
-	bufferLevel?: number; // seconds
-	latency?: number; // seconds (live delay)
-	isLive?: boolean; // whether the stream is live
+	bufferLevel?: number;
+	latency?: number;
+	isLive?: boolean;
 };
 
 type Props = {
@@ -25,7 +25,7 @@ export default function MetricsOverlay({ metrics, info }: Props) {
 	const { bitrateKbps: sBR, height: sH } = usePlayerStore();
 
 	const br = metrics?.bitrateKbps ?? sBR ?? 0; // kb/s number for fmtKbps
-	const res = metrics?.resolution ?? (sH ? `?x${sH}` : "—"); // e.g., 1920x1080 or em dash
+	const res = metrics?.resolution ?? (sH ? `?x${sH}` : "—");
 	const stalls = metrics?.stalls ?? 0;
 	const drops = metrics?.droppedFrames ?? 0;
 

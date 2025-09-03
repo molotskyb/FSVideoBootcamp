@@ -25,7 +25,11 @@ export function useDashPlayer(
 			try {
 				if (!videoRef.current) return;
 				wrapper = createDashPlayer();
-				await wrapper.init(videoRef.current, drm, opts);
+				await wrapper.init(
+					videoRef.current,
+					drm,
+					opts ? { lowLatencyEnabled: opts.lowLatency } : undefined
+				);
 				wrapper.on("bitrateChanged", store.onBitrate);
 				wrapper.on("error", store.onError);
 				await wrapper.load(manifestUrl);
@@ -39,7 +43,9 @@ export function useDashPlayer(
 			aborted = true;
 			try {
 				wrapper?.destroy();
-			} catch {}
+			} catch {
+				// intentionally ignored
+			}
 			setPlayer(null);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps

@@ -20,7 +20,7 @@ export default function HLSVideoPlayer({
 		const ctx = useOutletContext<Ctx>();
 		showMetrics = !!ctx?.showMetrics;
 	} catch {
-		// rendered outside <Outlet> — keep default false
+		// keep default false
 	}
 
 	const ref = useRef<HTMLVideoElement | null>(null);
