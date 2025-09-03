@@ -23,6 +23,7 @@ export default function Nav() {
 
 	return (
 		<nav
+			className="app-nav"
 			style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}
 		>
 			{tabs.map(([to, label]) => (

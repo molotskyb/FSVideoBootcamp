@@ -1,0 +1,29 @@
+.layout-header {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	align-items: center;
+	text-align: center;
+}
+
+.layout-title {
+	margin: 0;
+	flex: 0 0 auto;
+}
+
+.app-nav {
+	justify-content: center;
+}
+
+@media (min-width: 960px) {
+	.layout-header {
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+	}
+
+	.layout-header .app-nav {
+		justify-content: center;
+	}
+}

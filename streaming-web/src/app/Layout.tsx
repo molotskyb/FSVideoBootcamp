@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Nav from "./Nav";
+import "./Layout.css";
 
 export default function Layout() {
 	const [showMetrics, setShowMetrics] = useState(true);
@@ -26,17 +27,29 @@ export default function Layout() {
 					zIndex: 1000,
 				}}
 			/>
-			<div style={{ minHeight: "100vh", width: "100%" }}>
+			<div
+				style={{
+					minHeight: "100vh",
+					width: "100%",
+					display: "flex",
+					flexDirection: "column",
+				}}
+			>
 				<div
 					style={{
 						padding: "196px 16px 16px",
-						maxWidth: 1260,
+						maxWidth: 1320,
 						margin: "0 auto",
 						boxSizing: "border-box",
+						display: "flex",
+						flexDirection: "column",
+						gap: 16,
 					}}
 				>
-					<h1>Streaming Demos</h1>
-					<Nav />
+					<div className="layout-header">
+						<h1 className="layout-title">Streaming Demos</h1>
+						<Nav />
+					</div>
 					<Outlet context={{ showMetrics }} />
 				</div>
 			</div>
