@@ -6,8 +6,9 @@ const base = {
 	borderRadius: 6,
 	textDecoration: "none",
 	color: "black",
+	border: "1px solid transparent",
 } as const;
-const active = { background: "rgba(0, 255, 153, 0.37)" } as const;
+const active = { border: "1px solid red" } as const;
 
 export default function Nav() {
 	const tabs = [

@@ -33,7 +33,7 @@ export default function MetricsOverlay({ metrics, info }: Props) {
 
 	const latencyRow = metrics?.isLive
 		? `Latency: ${fmtSec(metrics?.latency)}s`
-		: "Latency: — (Not live)";
+		: "Latency: — none";
 
 	return (
 		<div

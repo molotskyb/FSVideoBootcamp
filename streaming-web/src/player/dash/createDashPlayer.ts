@@ -4,7 +4,8 @@ import type { PlayerAdapter, DrmConfig } from "../adapter";
 import { buildProtectionData } from "./drm";
 import { ev } from "./events";
 
-type InitOptions = { lowLatency?: boolean };
+// Match PlayerAdapter option naming to avoid TS mismatch
+type InitOptions = { lowLatencyEnabled?: boolean };
 
 export function createDashPlayer(): PlayerAdapter & {
 	getNative?: () => dashjs.MediaPlayerClass | null;
@@ -18,14 +19,26 @@ export function createDashPlayer(): PlayerAdapter & {
 	const handleQualityEvent = () => {
 		if (!p) return;
 		const dm = p.getDashMetrics?.();
-		const da = p.getDashAdapter?.();
+		const da: any = p.getDashAdapter?.();
 		const si = (p as any).getActiveStream?.()?.getStreamInfo?.();
 		const period = si?.index ?? 0;
-		const rs = dm?.getCurrentRepresentationSwitch?.("video");
-		const rep =
-			rs && da?.getRepresentationFor
-				? da.getRepresentationFor("video", rs.to, period)
-				: undefined;
+		const rs: any = dm?.getCurrentRepresentationSwitch?.("video");
+		let rep: any = undefined;
+		if (rs) {
+			if (da && typeof da.getRepresentationFor === "function") {
+				rep = da.getRepresentationFor("video", rs.to, period);
+			} else if (
+				da &&
+				typeof da.getMediaInfoForType === "function" &&
+				typeof da.getVoRepresentation === "function"
+			) {
+				const mi = da.getMediaInfoForType({ index: period }, "video");
+				const reps: any[] | undefined = da.getVoRepresentation(mi);
+				rep = Array.isArray(reps)
+					? reps.find((r) => r?.id === rs.to)
+					: undefined;
+			}
+		}
 		const kbps = rep?.bandwidth ? Math.round(rep.bandwidth / 1000) : 0;
 		emit("bitrateChanged", { bitrateKbps: kbps, height: rep?.height });
 	};
@@ -37,16 +50,37 @@ export function createDashPlayer(): PlayerAdapter & {
 		async init(video: HTMLVideoElement, drm?: DrmConfig, opt?: InitOptions) {
 			v = video;
 			p = dashjs.MediaPlayer().create();
-			p.updateSettings({
+			const baseSettings: any = {
 				streaming: {
 					abr: {
 						autoSwitchBitrate: { video: true },
 						initialBitrate: { video: 600 },
 					},
-					lowLatencyEnabled: !!opt?.lowLatency,
 				},
 				debug: { logLevel: dashjs.Debug.LOG_LEVEL_NONE },
-			});
+			};
+			(p.updateSettings as any)(baseSettings);
+
+			// Only set lowLatencyEnabled if the current dash.js build supports it
+			if (opt?.lowLatencyEnabled) {
+				try {
+					const cur: any = (p as any).getSettings?.();
+					if (
+						cur &&
+						cur.streaming &&
+						Object.prototype.hasOwnProperty.call(
+							cur.streaming,
+							"lowLatencyEnabled"
+						)
+					) {
+						(p.updateSettings as any)({
+							streaming: { lowLatencyEnabled: true },
+						});
+					}
+				} catch {
+					// ignore if unsupported in this dash.js version
+				}
+			}
 			p.initialize(video, undefined, false);
 			// Enable text by default for DASH captions lesson
 			(p as any).setTextDefaultEnabled?.(true);
@@ -66,7 +100,9 @@ export function createDashPlayer(): PlayerAdapter & {
 			if (/\.mp4($|\?)/i.test(url)) {
 				try {
 					p.reset();
-				} catch {}
+				} catch {
+					// ignore
+				}
 				v.src = url;
 				return;
 			}
