@@ -1,0 +1,47 @@
+const V_INIT = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps_480x270_600k/bbb_30fps_480x270_600k_0.m4v';
+const V_SEG1 = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps_480x270_600k/bbb_30fps_480x270_600k_1.m4v';
+const V_SEG2 = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps_480x270_600k/bbb_30fps_480x270_600k_2.m4v';
+
+const A_INIT = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_a64k/bbb_a64k_0.m4a';
+const A_SEG1 = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_a64k/bbb_a64k_1.m4a';
+const A_SEG2 = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_a64k/bbb_a64k_2.m4a';
+
+const video = document.querySelector('video');
+video.muted = true;              // allow autoplay
+video.playsInline = true;
+
+const ms = new MediaSource();
+video.removeAttribute('src');
+video.src = URL.createObjectURL(ms);
+
+const fetchBuf = url => fetch(url).then(r => r.arrayBuffer());
+const wait = sb => new Promise(res => sb.addEventListener('updateend', res, { once:true }));
+
+ms.addEventListener('sourceopen', async () => {
+  const vsb = ms.addSourceBuffer('video/mp4; codecs="avc1.42E01E"');
+  const asb = ms.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
+
+  // Append in safe order: video init -> audio init -> v1 -> a1 -> v2 -> a2
+  vsb.appendBuffer(await fetchBuf(V_INIT)); await wait(vsb);
+  asb.appendBuffer(await fetchBuf(A_INIT)); await wait(asb);
+
+  vsb.appendBuffer(await fetchBuf(V_SEG1)); await wait(vsb);
+  asb.appendBuffer(await fetchBuf(A_SEG1)); await wait(asb);
+
+  vsb.appendBuffer(await fetchBuf(V_SEG2)); await wait(vsb);
+  asb.appendBuffer(await fetchBuf(A_SEG2)); await wait(asb);
+
+  // Optional: tell the media element there is ~8s total buffered for now
+  ms.duration = 8;
+
+  // Nudge a paint and start
+  if (video.readyState < 2) { video.currentTime = 0.001; }
+  await video.play();
+
+  // Inspect buffers
+  console.log('V:', vsb.buffered.start(0), vsb.buffered.end(0));
+  console.log('A:', asb.buffered.start(0), asb.buffered.end(0));
+
+  // expose for tinkering
+  window.vsb = vsb; window.asb = asb;
+});
