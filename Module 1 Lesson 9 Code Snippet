@@ -1,0 +1,27 @@
+(async () => {
+  const systems = [
+    { id: 'com.widevine.alpha', label: 'Widevine' },
+    { id: 'com.microsoft.playready', label: 'PlayReady' },
+    { id: 'com.apple.fps.1_0', label: 'FairPlay' },
+  ];
+
+  // Minimal DASH-friendly config (CENC + H.264/AAC)
+  const configs = [{
+    initDataTypes: ['cenc', 'keyids'],
+    audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }],
+    videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }],
+    distinctiveIdentifier: 'optional',
+    persistentState: 'optional',
+    sessionTypes: ['temporary']
+  }];
+
+  for (const sys of systems) {
+    try {
+      const access = await navigator.requestMediaKeySystemAccess(sys.id, configs);
+      const cfg = access.getConfiguration();
+      console.log(`✅ ${sys.label} supported (${sys.id})`, cfg);
+    } catch {
+      console.log(`❌ ${sys.label} not supported (${sys.id})`);
+    }
+  }
+})();
