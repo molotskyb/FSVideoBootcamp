@@ -1,4 +1,4 @@
-To run the progect:
+To run the project:
 
 1. Install VSCode IDE.
 2. Install latest Node.js.
