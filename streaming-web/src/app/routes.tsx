@@ -11,6 +11,7 @@ const Mp4 = React.lazy(() => import("../pages/Mp4"));
 const CaptionsDash = React.lazy(() => import("../pages/CaptionsDash"));
 const LowLatencyHls = React.lazy(() => import("../pages/LowLatencyHls"));
 const LowLatencyDash = React.lazy(() => import("../pages/LowLatencyDash"));
+const Lab = React.lazy(() => import("../pages/Lab"));
 
 const routes: RouteObject[] = [
 	{
@@ -26,6 +27,7 @@ const routes: RouteObject[] = [
 			{ path: "hls-clear", element: React.createElement(HlsClear) },
 			{ path: "hls-drm", element: React.createElement(HlsDrm) },
 			{ path: "mp4", element: React.createElement(Mp4) },
+			{ path: "lab", element: React.createElement(Lab) },
 			{ path: "captions-dash", element: React.createElement(CaptionsDash) },
 			{ path: "ll-hls", element: React.createElement(LowLatencyHls) },
 			{ path: "ll-dash", element: React.createElement(LowLatencyDash) },

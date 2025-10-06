@@ -1,32 +1,41 @@
 {
-  "name": "streaming-web",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "dashjs": "^5.0.3",
-    "hls.js": "^1.6.10",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-router-dom": "^7.8.2"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "eslint": "^9.33.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
-  }
+	"name": "streaming-web",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"lint": "eslint .",
+		"preview": "vite preview",
+		"mp4:transcode": "ffmpeg -y -i assets/in.mp4 -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 4M -maxrate 4M -bufsize 8M -c:a aac -b:a 128k dist/output.mp4",
+		"thumbs": "shx mkdir -p dist/thumbs && ffmpeg -y -i assets/in.mp4 -vf fps=1,scale=320:-2 dist/thumbs/%03d.jpg",
+		"dash:cmaf": "ffmpeg -y -i assets/in.mp4 -map 0:v -map 0:a -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 4000k -maxrate 4000k -bufsize 8000k -c:a aac -b:a 128k -f dash -use_template 1 -use_timeline 0 -init_seg_name init-$RepresentationID$.mp4 -media_seg_name chunk-$RepresentationID$-$Number%05d$.m4s -seg_duration 2 -adaptation_sets \"id=0,streams=v id=1,streams=a\" dist/dash/stream.mpd",
+		"clean:ff": "shx rm -rf ffout && shx mkdir -p ffout",
+		"probe": "ffprobe -hide_banner -v error -show_streams -show_format public/assets/sample.mp4",
+		"ffmpeg:test": "yarn clean:ff && ffmpeg -hide_banner -y -i public/assets/sample.mp4 -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 1M -maxrate 1M -bufsize 2M -c:a aac -b:a 128k ffout/output.mp4 && ffprobe -v error -show_entries format=duration:stream=codec_name -of json ffout/output.mp4",
+		"hls:cmaf": "ffmpeg -y -i public/assets/sample.mp4 -map 0:v -map 0:a -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 4M -maxrate 4M -bufsize 8M -c:a aac -b:a 128k -f hls -hls_time 2 -hls_segment_type fmp4 -hls_flags independent_segments -master_pl_name master.m3u8 -hls_fmp4_init_filename init.mp4 -hls_segment_filename \"ffout/hls/seg_%03d.m4s\" ffout/hls/stream.m3u8",
+		"hls:publish": "shx rm -rf public/media/hls && shx mkdir -p public/media && shx cp -r ffout/hls public/media/hls"
+	},
+	"dependencies": {
+		"dashjs": "^5.0.3",
+		"hls.js": "^1.6.10",
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1",
+		"react-router-dom": "^7.8.2"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.33.0",
+		"@types/react": "^19.1.10",
+		"@types/react-dom": "^19.1.7",
+		"@vitejs/plugin-react": "^5.0.0",
+		"eslint": "^9.33.0",
+		"eslint-plugin-react-hooks": "^5.2.0",
+		"eslint-plugin-react-refresh": "^0.4.20",
+		"globals": "^16.3.0",
+		"shx": "^0.4.0",
+		"typescript": "~5.8.3",
+		"typescript-eslint": "^8.39.1",
+		"vite": "^7.1.2"
+	}
 }

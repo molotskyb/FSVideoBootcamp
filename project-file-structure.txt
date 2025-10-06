@@ -1,0 +1,77 @@
+Project File Structure
+Generated: 2025-09-12 04:41:07 UTC
+Root: /Users/borismolotsky/Desktop/Project 27/Full-Stack Video Streaming Bootcamp/repo/web
+Excluding: node_modules, dist, build, .next, coverage, .git
+
+/Users/borismolotsky/Desktop/Project 27/Full-Stack Video Streaming Bootcamp/repo/web
+├── streaming-web/
+|  ├── public/
+|  |  ├── assets/
+|  |  |  └── logo.png
+|  |  └── vite.svg
+|  ├── src/
+|  |  ├── app/
+|  |  |  ├── App.css
+|  |  |  ├── App.tsx
+|  |  |  ├── Layout.css
+|  |  |  ├── Layout.tsx
+|  |  |  ├── Nav.tsx
+|  |  |  └── routes.tsx
+|  |  ├── components/
+|  |  |  ├── Controls.tsx
+|  |  |  ├── ErrorBanner.tsx
+|  |  |  ├── HLSFairPlayPlayer.tsx
+|  |  |  ├── HLSVideoPlayer.tsx
+|  |  |  ├── MetricsOverlay.tsx
+|  |  |  ├── VideoPlayer.tsx
+|  |  |  └── videoFrame.css
+|  |  ├── config/
+|  |  |  ├── env.ts
+|  |  |  └── sources.ts
+|  |  ├── hooks/
+|  |  |  ├── useDashPlayer.ts
+|  |  |  ├── useHtml5Metrics.ts
+|  |  |  └── useMetrics.ts
+|  |  ├── pages/
+|  |  |  ├── CaptionsDash.tsx
+|  |  |  ├── DashClear.tsx
+|  |  |  ├── DashDrm.tsx
+|  |  |  ├── HlsClear.tsx
+|  |  |  ├── HlsDrm.tsx
+|  |  |  ├── LowLatencyDash.tsx
+|  |  |  ├── LowLatencyHls.tsx
+|  |  |  └── Mp4.tsx
+|  |  ├── player/
+|  |  |  ├── dash/
+|  |  |  |  ├── createDashPlayer.ts
+|  |  |  |  ├── drm.test.ts
+|  |  |  |  ├── drm.ts
+|  |  |  |  └── events.ts
+|  |  |  └── adapter.ts
+|  |  ├── state/
+|  |  |  ├── playerStore.tsx
+|  |  |  └── usePlayerStore.ts
+|  |  ├── types/
+|  |  |  ├── dash-augment.d.ts
+|  |  |  └── index.d.ts
+|  |  ├── utils/
+|  |  |  └── format.ts
+|  |  ├── env.d.ts
+|  |  ├── index.css
+|  |  ├── main.tsx
+|  |  └── vite-env.d.ts
+|  ├── .env.example
+|  ├── .env.local
+|  ├── .gitignore
+|  ├── README.md
+|  ├── eslint.config.js
+|  ├── index.html
+|  ├── package.json
+|  ├── tsconfig.app.json
+|  ├── tsconfig.json
+|  ├── tsconfig.node.json
+|  ├── vite.config.ts
+|  └── yarn.lock
+└── project-file-structure.txt
+
+
