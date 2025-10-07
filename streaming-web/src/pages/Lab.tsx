@@ -7,12 +7,12 @@ type Src = { label: string; type: "mp4" | "hls" | "dash"; url: string };
 
 const PRESETS: Src[] = [
 	{ label: "MP4 sample", type: "mp4", url: "/assets/sample.mp4" },
+	{ label: "MP4 output", type: "mp4", url: "/media/output.mp4" },
 	{ label: "HLS CMAF", type: "hls", url: "/media/hls/master.m3u8" },
 	{ label: "DASH CMAF", type: "dash", url: "/media/dash/stream.mpd" },
-	// comparisons you publish per lesson:
 	{ label: "CRF=23", type: "mp4", url: "/media/crf/crf23.mp4" },
 	{ label: "CBR 2M", type: "mp4", url: "/media/cbr/cbr_2M.mp4" },
-	{ label: "VBR 2-pass 2M", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
+	{ label: "VBR 2-pass", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
 	{ label: "HLS 2s", type: "hls", url: "/media/hls2s/master.m3u8" },
 	{ label: "HLS 6s", type: "hls", url: "/media/hls6s/master.m3u8" },
 ];
@@ -92,13 +92,24 @@ function Player({ src }: { src: Src }) {
 	return (
 		<div
 			className="p-4 rounded-xl"
-			style={{ background: "#111", color: "#ddd", display: "flex", flexDirection: "column", gap: 12 }}
+			style={{
+				background: "#111",
+				color: "#ddd",
+				display: "flex",
+				flexDirection: "column",
+				gap: 12,
+			}}
 		>
 			<video
 				ref={ref}
 				controls
 				playsInline
-				style={{ width: "100%", height: "auto", borderRadius: 8, backgroundColor: "black" }}
+				style={{
+					width: "100%",
+					height: "auto",
+					borderRadius: 8,
+					backgroundColor: "black",
+				}}
 			/>
 			<div
 				style={{
