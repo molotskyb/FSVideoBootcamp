@@ -20,7 +20,14 @@
 		"dash:cmaf:win": "shx rm -rf ../ffout/dash && shx mkdir -p ../ffout/dash && ffmpeg -y -i public/assets/sample.mp4 -map 0:v -map 0:a -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 4000k -maxrate 4000k -bufsize 8000k -c:a aac -b:a 128k -f dash -use_template 1 -use_timeline 0 -init_seg_name init-$RepresentationID$.mp4 -media_seg_name chunk-$RepresentationID$-$Number%%05d$.m4s -seg_duration 2 -adaptation_sets \"id=0,streams=v id=1,streams=a\" ../ffout/dash/stream.mpd",
 		"media:publish:mp4": "shx mkdir -p public/media && shx cp ../ffout/output.mp4 public/media/output.mp4",
 		"hls:publish": "shx rm -rf public/media/hls && shx mkdir -p public/media && shx cp -r ../ffout/hls public/media/hls",
-		"dash:publish": "shx rm -rf public/media/dash && shx mkdir -p public/media && shx cp -r ../ffout/dash public/media/dash"
+		"dash:publish": "shx rm -rf public/media/dash && shx mkdir -p public/media && shx cp -r ../ffout/dash public/media/dash",
+		"tour:clean": "shx rm -rf ../ffout/tour && shx mkdir -p ../ffout/tour",
+		"tour:probe": "ffprobe -hide_banner -show_streams -show_format public/assets/sample.mp4",
+		"tour:trim": "yarn tour:clean && ffmpeg -hide_banner -y -ss 0 -to 5 -i public/assets/sample.mp4 -c copy ../ffout/tour/clip_5s.mp4",
+		"tour:transcode": "ffmpeg -hide_banner -y -i ../ffout/tour/clip_5s.mp4 -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -b:v 2M -maxrate 2M -bufsize 4M -c:a aac -b:a 128k ../ffout/tour/clip_5s_transcoded.mp4",
+		"tour:verify": "ffprobe -hide_banner -show_entries format=duration ../ffout/tour/clip_5s.mp4 && ffprobe -hide_banner -show_entries stream=codec_name -of json ../ffout/tour/clip_5s_transcoded.mp4",
+		"tour:publish": "shx mkdir -p public/media/tour && shx cp ../ffout/tour/clip_5s_transcoded.mp4 public/media/tour/",
+		"tour:all": "yarn tour:probe && yarn tour:trim && yarn tour:transcode && yarn tour:verify"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
