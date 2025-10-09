@@ -40,7 +40,16 @@
 		"rate:all": "yarn rate:crf23 && yarn rate:cbr2m && yarn rate:vbr2pass2m && yarn rate:verify",
 		"probe:sample": "ffprobe -hide_banner -show_streams -show_format public/assets/sample.mp4",
 		"probe:output": "ffprobe -hide_banner -show_entries stream=codec_name,width,height:format=duration,bit_rate -of json ../ffout/output.mp4",
-		"rate:probe": "shx ls -lh ../ffout/rate && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/crf23.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/cbr_2M.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/vbr_2pass_2M.mp4"
+		"rate:probe": "shx ls -lh ../ffout/rate && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/crf23.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/cbr_2M.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/rate/vbr_2pass_2M.mp4",
+		"rate:probe:all": "yarn probe:sample && yarn probe:output && yarn rate:probe",
+		"ladder:clean": "shx rm -rf ../ffout/ladder && shx mkdir -p ../ffout/ladder",
+		"ladder:p240": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:426  -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p240.mp4",
+		"ladder:p360": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:640  -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p360.mp4",
+		"ladder:p480": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:854  -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p480.mp4",
+		"ladder:p720": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:1280 -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p720.mp4",
+		"ladder:p1080": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:1920 -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p1080.mp4",
+		"ladder:verify": "ls -lh ../ffout/ladder/*.mp4 && ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 ../ffout/ladder/*.mp4",
+		"ladder:publish": "shx rm -rf public/media/ladder && shx mkdir -p public/media/ladder && shx cp ../ffout/ladder/*.mp4 public/media/ladder/"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
