@@ -49,7 +49,8 @@
 		"ladder:p720": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:1280 -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p720.mp4",
 		"ladder:p1080": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:1920 -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p1080.mp4",
 		"ladder:verify": "ls -lh ../ffout/ladder/*.mp4 && ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 ../ffout/ladder/*.mp4",
-		"ladder:publish": "shx rm -rf public/media/ladder && shx mkdir -p public/media/ladder && shx cp ../ffout/ladder/*.mp4 public/media/ladder/"
+		"ladder:publish": "shx rm -rf public/media/ladder && shx mkdir -p public/media/ladder && shx cp ../ffout/ladder/*.mp4 public/media/ladder/",
+		"ladder:all": "yarn ladder:clean && yarn ladder:p240 && yarn ladder:p360 && yarn ladder:p480 && yarn ladder:p720 && yarn ladder:p1080 && yarn ladder:verify"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
