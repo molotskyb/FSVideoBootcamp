@@ -66,7 +66,13 @@
 		"codecs:probe:duration": "ffprobe -hide_banner -show_entries format=duration -of json ../ffout/codecs/hevc_5s.mp4",
 		"codecs:probe:hevc": "ffprobe -hide_banner -show_entries stream=codec_name -of json ../ffout/codecs/hevc_5s.mp4",
 		"codecs:probe:av1": "ffprobe -hide_banner -show_entries stream=codec_name -of json ../ffout/codecs/av1_5s.mp4",
-		"codecs:probe": "yarn codecs:probe:duration && yarn codecs:probe:hevc && yarn codecs:probe:av1"
+		"codecs:probe": "yarn codecs:probe:duration && yarn codecs:probe:hevc && yarn codecs:probe:av1",
+		"audio:clean": "shx rm -rf ../ffout/audio && shx mkdir -p ../ffout/audio",
+		"audio:m4a": "ffmpeg -hide_banner -y -i public/assets/sample.mp4 -vn -c:a aac -b:a 128k ../ffout/audio/sample_aac128.m4a",
+		"audio:mp4": "ffmpeg -hide_banner -y -i public/assets/sample.mp4 -an -vn -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 -shortest ../ffout/audio/blank.mp4 && ffmpeg -hide_banner -y -i public/assets/sample.mp4 -vn -c:a aac -b:a 128k -map a ../ffout/audio/sample_aac128.mp4",
+		"audio:verify": "ls -lh ../ffout/audio/* && ffprobe -hide_banner -show_entries stream=codec_name,channels,bit_rate -of json ../ffout/audio/sample_aac128.m4a && ffprobe -hide_banner -show_entries stream=codec_name,channels,bit_rate -of json ../ffout/audio/sample_aac128.mp4",
+		"audio:publish": "shx rm -rf public/media/audio && shx mkdir -p public/media/audio && shx cp ../ffout/audio/*.m4a public/media/audio/ && shx cp ../ffout/audio/*.mp4 public/media/audio/",
+		"audio:all": "yarn audio:clean && yarn audio:m4a && yarn audio:mp4 && yarn audio:verify"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
