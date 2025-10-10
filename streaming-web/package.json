@@ -1,7 +1,7 @@
 {
 	"name": "streaming-web",
 	"private": true,
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -50,7 +50,13 @@
 		"ladder:p1080": "ffmpeg -y -i public/assets/sample.mp4 -vf scale=-2:1920 -c:v libx264 -crf 23 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/ladder/p1080.mp4",
 		"ladder:verify": "ls -lh ../ffout/ladder/*.mp4 && ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 ../ffout/ladder/*.mp4",
 		"ladder:publish": "shx rm -rf public/media/ladder && shx mkdir -p public/media/ladder && shx cp ../ffout/ladder/*.mp4 public/media/ladder/",
-		"ladder:all": "yarn ladder:clean && yarn ladder:p240 && yarn ladder:p360 && yarn ladder:p480 && yarn ladder:p720 && yarn ladder:p1080 && yarn ladder:verify"
+		"ladder:all": "yarn ladder:clean && yarn ladder:p240 && yarn ladder:p360 && yarn ladder:p480 && yarn ladder:p720 && yarn ladder:p1080 && yarn ladder:verify",
+		"presets:clean": "shx rm -rf ../ffout/presets && shx mkdir -p ../ffout/presets",
+		"presets:ultrafast": "ffmpeg -y -i public/assets/sample.mp4 -c:v libx264 -crf 23 -preset ultrafast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/presets/ultrafast.mp4",
+		"presets:slow": "ffmpeg -y -i public/assets/sample.mp4 -c:v libx264 -crf 23 -preset slow -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/presets/slow.mp4",
+		"presets:verify": "ls -lh ../ffout/presets/*.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/presets/ultrafast.mp4 && ffprobe -hide_banner -show_entries format=bit_rate -of json ../ffout/presets/slow.mp4",
+		"presets:publish": "shx rm -rf public/media/presets && shx mkdir -p public/media/presets && shx cp ../ffout/presets/*.mp4 public/media/presets/",
+		"presets:all": "yarn presets:clean && yarn presets:ultrafast && yarn presets:slow && yarn presets:verify"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
