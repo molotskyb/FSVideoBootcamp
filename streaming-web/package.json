@@ -85,7 +85,16 @@
 		"thumbs:vtt:extract": "ffmpeg -hide_banner -y -i public/assets/sample.mp4 -vf fps=1/2,scale=320:-2 ../ffout/thumbs_vtt/thumb_%05d.jpg",
 		"thumbs:vtt:make": "node -e \"const fs=require('fs');const dir='../ffout/thumbs_vtt';const step=2;const files=fs.readdirSync(dir).filter(f=>/^thumb_\\d+\\.jpg$/.test(f)).sort();let t=0;let out='WEBVTT\\n\\n';for(let i=0;i<files.length;i++){const s=new Date(t*1000).toISOString().substr(11,12);const e=new Date((t+step)*1000).toISOString().substr(11,12);out+=`${s} --> ${e}\\n${files[i]}\\n\\n`;t+=step;}fs.writeFileSync(dir+'/thumbs.vtt',out);console.log('Wrote',dir+'/thumbs.vtt');\"",
 		"thumbs:vtt:verify": "shx ls -lh ../ffout/thumbs_vtt | head -n 20 && shx head -n 12 ../ffout/thumbs_vtt/thumbs.vtt",
-		"thumbs:vtt:publish": "shx rm -rf public/media/thumbs_vtt && shx mkdir -p public/media/thumbs_vtt && shx cp ../ffout/thumbs_vtt/* public/media/thumbs_vtt/"
+		"thumbs:vtt:publish": "shx rm -rf public/media/thumbs_vtt && shx mkdir -p public/media/thumbs_vtt && shx cp ../ffout/thumbs_vtt/* public/media/thumbs_vtt/",
+		"captions:clean": "shx rm -rf ../ffout/captions && shx mkdir -p ../ffout/captions",
+		"captions:sample": "node -e \"require('fs').writeFileSync('../ffout/captions/en.vtt','WEBVTT\\n\\n00:00:00.000 --> 00:00:02.000\\nHello world.\\n\\n00:00:02.000 --> 00:00:05.000\\nThis is a caption demo.\\n')\"",
+		"captions:from-srt": "shx test -f public/assets/captions/en.srt && ffmpeg -hide_banner -y -i public/assets/captions/en.srt ../ffout/captions/en.vtt || echo 'Place SRT at public/assets/captions/en.srt'",
+		"captions:verify": "shx head -n 10 ../ffout/captions/en.vtt",
+		"captions:publish": "shx rm -rf public/media/captions && shx mkdir -p public/media/captions && shx cp ../ffout/captions/*.vtt public/media/captions/",
+		"dash:subs:clean": "shx rm -rf ../ffout/dash_subs && shx mkdir -p ../ffout/dash_subs",
+		"dash:subs:package": "packager input=../ffout/captions/en.vtt,stream=text,language=en,init_segment=../ffout/dash_subs/init.vtt,segment_template=../ffout/dash_subs/sub_$Number$.vtt --segment_duration 2 --mpd_output ../ffout/dash_subs/stream.mpd",
+		"dash:subs:verify": "shx ls -lh ../ffout/dash_subs && shx head -n 30 ../ffout/dash_subs/stream.mpd",
+		"dash:subs:publish": "shx rm -rf public/media/dash_subs && shx mkdir -p public/media/dash_subs && shx cp -r ../ffout/dash_subs/* public/media/dash_subs/"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
