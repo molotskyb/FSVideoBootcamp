@@ -72,7 +72,11 @@
 		"audio:mp4": "ffmpeg -hide_banner -y -i public/assets/sample.mp4 -an -vn -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 -shortest ../ffout/audio/blank.mp4 && ffmpeg -hide_banner -y -i public/assets/sample.mp4 -vn -c:a aac -b:a 128k -map a ../ffout/audio/sample_aac128.mp4",
 		"audio:verify": "ls -lh ../ffout/audio/* && ffprobe -hide_banner -show_entries stream=codec_name,channels,bit_rate -of json ../ffout/audio/sample_aac128.m4a && ffprobe -hide_banner -show_entries stream=codec_name,channels,bit_rate -of json ../ffout/audio/sample_aac128.mp4",
 		"audio:publish": "shx rm -rf public/media/audio && shx mkdir -p public/media/audio && shx cp ../ffout/audio/*.m4a public/media/audio/ && shx cp ../ffout/audio/*.mp4 public/media/audio/",
-		"audio:all": "yarn audio:clean && yarn audio:m4a && yarn audio:mp4 && yarn audio:verify"
+		"audio:all": "yarn audio:clean && yarn audio:m4a && yarn audio:mp4 && yarn audio:verify",
+		"hls:sp:clean": "shx rm -rf ../ffout/hls_sp && shx mkdir -p ../ffout/hls_sp/{audio,video}",
+		"hls:sp:package": "packager input=../ffout/output.mp4,stream=video,init_segment=../ffout/hls_sp/video/init.mp4,segment_template=../ffout/hls_sp/video/seg_$Number$.m4s,hls_name=v1080,hls_group_id=video input=../ffout/audio/sample_aac128.m4a,stream=audio,init_segment=../ffout/hls_sp/audio/init.mp4,segment_template=../ffout/hls_sp/audio/seg_$Number$.m4s,hls_name=aac128,hls_group_id=audio --segment_duration 2 --fragment_duration 2 --hls_playlist_type VOD --hls_master_playlist_output ../ffout/hls_sp/master.m3u8",
+		"hls:sp:verify": "shx ls -lh ../ffout/hls_sp && shx ls -lh ../ffout/hls_sp/audio/*.m4s | wc -l && shx ls -lh ../ffout/hls_sp/video/*.m4s | wc -l && shx head -n 20 ../ffout/hls_sp/master.m3u8",
+		"hls:sp:publish": "shx rm -rf public/media/hls_sp && shx mkdir -p public/media/hls_sp && shx cp -r ../ffout/hls_sp/* public/media/hls_sp/"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
