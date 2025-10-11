@@ -94,7 +94,13 @@
 		"dash:subs:clean": "shx rm -rf ../ffout/dash_subs && shx mkdir -p ../ffout/dash_subs",
 		"dash:subs:package": "packager input=../ffout/captions/en.vtt,stream=text,language=en,init_segment=../ffout/dash_subs/init.vtt,segment_template=../ffout/dash_subs/sub_$Number$.vtt --segment_duration 2 --mpd_output ../ffout/dash_subs/stream.mpd",
 		"dash:subs:verify": "shx ls -lh ../ffout/dash_subs && shx head -n 30 ../ffout/dash_subs/stream.mpd",
-		"dash:subs:publish": "shx rm -rf public/media/dash_subs && shx mkdir -p public/media/dash_subs && shx cp -r ../ffout/dash_subs/* public/media/dash_subs/"
+		"dash:subs:publish": "shx rm -rf public/media/dash_subs && shx mkdir -p public/media/dash_subs && shx cp -r ../ffout/dash_subs/* public/media/dash_subs/",
+		"captions:burnin": "shx mkdir -p ../ffout/captions && shx test -f public/assets/captions/en.srt && ffmpeg -hide_banner -y -i public/assets/sample.mp4 -vf \"subtitles=public/assets/captions/en.srt\" -c:v libx264 -preset veryfast -g 60 -keyint_min 60 -sc_threshold 0 -c:a aac -b:a 128k ../ffout/captions/out_burnin.mp4 || echo 'Place SRT at public/assets/captions/en.srt'",
+		"captions:embed": "shx mkdir -p ../ffout/captions && shx test -f public/assets/captions/en.srt && ffmpeg -hide_banner -y -i public/assets/sample.mp4 -i public/assets/captions/en.srt -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=en ../ffout/captions/out_tx3g.mp4 || echo 'Place SRT at public/assets/captions/en.srt'",
+		"captions:verify:burnin": "ffprobe -hide_banner -show_entries stream=codec_name,width,height -of json ../ffout/captions/out_burnin.mp4",
+		"captions:verify:embed": "ffprobe -hide_banner -show_entries stream=index,codec_type,codec_name:format=nb_streams -of json ../ffout/captions/out_tx3g.mp4",
+		"captions:publish:mp4": "shx rm -rf public/media/captions && shx mkdir -p public/media/captions && shx cp ../ffout/captions/out_*.mp4 public/media/captions/ || true",
+		"captions:all:mp4": "yarn captions:burnin && yarn captions:embed && yarn captions:verify:burnin && yarn captions:verify:embed && yarn captions:publish:mp4"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
