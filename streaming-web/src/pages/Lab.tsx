@@ -4,6 +4,12 @@ import Hls from "hls.js";
 import * as dashjs from "dashjs";
 
 type Src = { label: string; type: "mp4" | "hls" | "dash"; url: string };
+type Cap = {
+	label: string;
+	url: string | null;
+	lang?: string;
+	kind?: "subtitles" | "captions";
+};
 
 const PRESETS: Src[] = [
 	{ label: "MP4 sample", type: "mp4", url: "/assets/sample.mp4" },
@@ -17,6 +23,16 @@ const PRESETS: Src[] = [
 	{ label: "HLS 6s", type: "hls", url: "/media/hls6s/master.m3u8" },
 ];
 
+const CAPTIONS: Cap[] = [
+	{ label: "None", url: null },
+	{
+		label: "English (VTT)",
+		url: "/media/captions/en.vtt",
+		lang: "en",
+		kind: "subtitles",
+	},
+];
+
 async function headSize(url: string): Promise<number | null> {
 	try {
 		const r = await fetch(url, { method: "HEAD" });
@@ -27,7 +43,7 @@ async function headSize(url: string): Promise<number | null> {
 	}
 }
 
-function Player({ src }: { src: Src }) {
+function Player({ src, caption }: { src: Src; caption: Cap }) {
 	const ref = useRef<HTMLVideoElement>(null);
 	const [size, setSize] = useState<number | null>(null);
 	const [avgKbps, setAvgKbps] = useState<number | null>(null);
@@ -89,6 +105,28 @@ function Player({ src }: { src: Src }) {
 		};
 	}, [src]);
 
+	useEffect(() => {
+		const video = ref.current;
+		if (!video) return;
+		const syncSubtitle = () => {
+			const tracks = Array.from(
+				video.querySelectorAll<HTMLTrackElement>("track[data-lab-track='true']")
+			);
+			for (const el of tracks) {
+				const track = el.track;
+				if (!track) continue;
+				track.mode = caption.url ? "showing" : "disabled";
+			}
+		};
+		syncSubtitle();
+		video.addEventListener("loadedmetadata", syncSubtitle);
+		video.addEventListener("loadeddata", syncSubtitle);
+		return () => {
+			video.removeEventListener("loadedmetadata", syncSubtitle);
+			video.removeEventListener("loadeddata", syncSubtitle);
+		};
+	}, [caption, src.url]);
+
 	return (
 		<div
 			className="p-4 rounded-xl"
@@ -110,7 +148,19 @@ function Player({ src }: { src: Src }) {
 					borderRadius: 8,
 					backgroundColor: "black",
 				}}
-			/>
+			>
+				{caption.url ? (
+					<track
+						key={caption.url}
+						kind={caption.kind ?? "subtitles"}
+						src={caption.url}
+						srcLang={caption.lang}
+						label={caption.label}
+						data-lab-track="true"
+						default
+					/>
+				) : null}
+			</video>
 			<div
 				style={{
 					display: "flex",
@@ -136,11 +186,22 @@ function Player({ src }: { src: Src }) {
 export default function Lab() {
 	const [a, setA] = useState<Src>(PRESETS[0]);
 	const [b, setB] = useState<Src>(PRESETS[1]);
+	const [capA, setCapA] = useState<Cap>(CAPTIONS[0]);
+	const [capB, setCapB] = useState<Cap>(CAPTIONS[0]);
 	const options = useMemo(
 		() =>
 			PRESETS.map((s, i) => (
 				<option key={i} value={i}>
 					{s.label}
+				</option>
+			)),
+		[]
+	);
+	const captionOptions = useMemo(
+		() =>
+			CAPTIONS.map((c, i) => (
+				<option key={i} value={i}>
+					{c.label}
 				</option>
 			)),
 		[]
@@ -165,12 +226,30 @@ export default function Lab() {
 					</select>
 				</label>
 				<label>
+					Left subtitles
+					<select
+						value={CAPTIONS.indexOf(capA)}
+						onChange={(e) => setCapA(CAPTIONS[+e.target.value])}
+					>
+						{captionOptions}
+					</select>
+				</label>
+				<label>
 					Right source
 					<select
 						value={PRESETS.indexOf(b)}
 						onChange={(e) => setB(PRESETS[+e.target.value])}
 					>
 						{options}
+					</select>
+				</label>
+				<label>
+					Right subtitles
+					<select
+						value={CAPTIONS.indexOf(capB)}
+						onChange={(e) => setCapB(CAPTIONS[+e.target.value])}
+					>
+						{captionOptions}
 					</select>
 				</label>
 			</div>
@@ -182,8 +261,8 @@ export default function Lab() {
 					gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
 				}}
 			>
-				<Player src={a} />
-				<Player src={b} />
+				<Player src={a} caption={capA} />
+				<Player src={b} caption={capB} />
 			</div>
 		</div>
 	);
