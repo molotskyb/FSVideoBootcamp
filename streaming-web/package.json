@@ -100,7 +100,11 @@
 		"captions:verify:burnin": "ffprobe -hide_banner -show_entries stream=codec_name,width,height -of json ../ffout/captions/out_burnin.mp4",
 		"captions:verify:embed": "ffprobe -hide_banner -show_entries stream=index,codec_type,codec_name:format=nb_streams -of json ../ffout/captions/out_tx3g.mp4",
 		"captions:publish:mp4": "shx rm -rf public/media/captions && shx mkdir -p public/media/captions && shx cp ../ffout/captions/out_*.mp4 public/media/captions/ || true",
-		"captions:all:mp4": "yarn captions:burnin && yarn captions:embed && yarn captions:verify:burnin && yarn captions:verify:embed && yarn captions:publish:mp4"
+		"captions:all:mp4": "yarn captions:burnin && yarn captions:embed && yarn captions:verify:burnin && yarn captions:verify:embed && yarn captions:publish:mp4",
+		"hls:subs:clean": "shx rm -rf ../ffout/hls_subs && shx mkdir -p ../ffout/hls_subs",
+		"hls:subs:package": "packager input=../ffout/captions/en.vtt,stream=text,language=en,hls_name=English,hls_group_id=subs,segment_template=../ffout/hls_subs/sub_$Number$.vtt,hls_playlist_name=en.m3u8 --segment_duration 2 --hls_master_playlist_output ../ffout/hls_subs/master_subs.m3u8",
+		"hls:subs:verify": "shx ls -lh ../ffout/hls_subs && shx head -n 30 ../ffout/hls_subs/master_subs.m3u8",
+		"hls:subs:publish": "shx rm -rf public/media/hls_subs && shx mkdir -p public/media/hls_subs && shx cp -r ../ffout/hls_subs/* public/media/hls_subs/"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
