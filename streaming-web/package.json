@@ -109,7 +109,12 @@
 		"hls:dur:2s": "packager input=../ffout/output.mp4,stream=video,init_segment=../ffout/hls2s/video/init.mp4,segment_template=../ffout/hls2s/video/seg_$Number$.m4s,hls_name=v1080,hls_group_id=video input=../ffout/audio/sample_aac128.m4a,stream=audio,init_segment=../ffout/hls2s/audio/init.mp4,segment_template=../ffout/hls2s/audio/seg_$Number$.m4s,hls_name=aac128,hls_group_id=audio --segment_duration 2 --fragment_duration 2 --hls_playlist_type VOD --hls_master_playlist_output ../ffout/hls2s/master.m3u8",
 		"hls:dur:6s": "packager input=../ffout/output.mp4,stream=video,init_segment=../ffout/hls6s/video/init.mp4,segment_template=../ffout/hls6s/video/seg_$Number$.m4s,hls_name=v1080,hls_group_id=video input=../ffout/audio/sample_aac128.m4a,stream=audio,init_segment=../ffout/hls6s/audio/init.mp4,segment_template=../ffout/hls6s/audio/seg_$Number$.m4s,hls_name=aac128,hls_group_id=audio --segment_duration 6 --fragment_duration 6 --hls_playlist_type VOD --hls_master_playlist_output ../ffout/hls6s/master.m3u8",
 		"hls:dur:verify": "shx ls -1 ../ffout/hls2s/video/*.m4s | wc -l && shx ls -1 ../ffout/hls6s/video/*.m4s | wc -l && shx head -n 20 ../ffout/hls2s/master.m3u8 && shx head -n 20 ../ffout/hls6s/master.m3u8",
-		"hls:dur:publish": "shx rm -rf public/media/hls2s public/media/hls6s && shx mkdir -p public/media && shx cp -r ../ffout/hls2s public/media/hls2s && shx cp -r ../ffout/hls6s public/media/hls6s"
+		"hls:dur:publish": "shx rm -rf public/media/hls2s public/media/hls6s && shx mkdir -p public/media && shx cp -r ../ffout/hls2s public/media/hls2s && shx cp -r ../ffout/hls6s public/media/hls6s",
+		"lint:hls:ffprobe": "ffprobe -hide_banner -v error -show_entries format=filename:stream=codec_name,codec_type -of json public/media/hls_sp/master.m3u8",
+		"lint:dash:ffprobe": "ffprobe -hide_banner -v error -show_entries format=filename:stream=codec_name,codec_type -of json public/media/dash_sp/stream.mpd",
+		"lint:hls:tags": "shx grep -n \"^#EXTM3U\" public/media/hls_sp/master.m3u8 && shx grep -n \"#EXT-X-VERSION\" public/media/hls_sp/master.m3u8 && shx grep -n \"#EXT-X-MEDIA\" public/media/hls_sp/master.m3u8 || true && shx grep -n \"#EXT-X-STREAM-INF\" public/media/hls_sp/master.m3u8 || true",
+		"lint:dash:tags": "shx grep -n \"<AdaptationSet\" public/media/dash_sp/stream.mpd && shx grep -n \"<Representation\" public/media/dash_sp/stream.mpd && shx grep -n \"SegmentTemplate\" public/media/dash_sp/stream.mpd",
+		"dash:sp:bundle": "shx rm -f ../ffout/dash_sp_bundle.zip && (cd public/media && shx zip -r ../../ffout/dash_sp_bundle.zip dash_sp)"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
