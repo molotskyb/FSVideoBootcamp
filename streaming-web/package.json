@@ -104,7 +104,12 @@
 		"hls:subs:clean": "shx rm -rf ../ffout/hls_subs && shx mkdir -p ../ffout/hls_subs",
 		"hls:subs:package": "packager input=../ffout/captions/en.vtt,stream=text,language=en,hls_name=English,hls_group_id=subs,segment_template=../ffout/hls_subs/sub_$Number$.vtt,hls_playlist_name=en.m3u8 --segment_duration 2 --hls_master_playlist_output ../ffout/hls_subs/master_subs.m3u8",
 		"hls:subs:verify": "shx ls -lh ../ffout/hls_subs && shx head -n 30 ../ffout/hls_subs/master_subs.m3u8",
-		"hls:subs:publish": "shx rm -rf public/media/hls_subs && shx mkdir -p public/media/hls_subs && shx cp -r ../ffout/hls_subs/* public/media/hls_subs/"
+		"hls:subs:publish": "shx rm -rf public/media/hls_subs && shx mkdir -p public/media/hls_subs && shx cp -r ../ffout/hls_subs/* public/media/hls_subs/",
+		"hls:dur:clean": "shx rm -rf ../ffout/hls2s ../ffout/hls6s && shx mkdir -p ../ffout/hls2s/{audio,video} ../ffout/hls6s/{audio,video}",
+		"hls:dur:2s": "packager input=../ffout/output.mp4,stream=video,init_segment=../ffout/hls2s/video/init.mp4,segment_template=../ffout/hls2s/video/seg_$Number$.m4s,hls_name=v1080,hls_group_id=video input=../ffout/audio/sample_aac128.m4a,stream=audio,init_segment=../ffout/hls2s/audio/init.mp4,segment_template=../ffout/hls2s/audio/seg_$Number$.m4s,hls_name=aac128,hls_group_id=audio --segment_duration 2 --fragment_duration 2 --hls_playlist_type VOD --hls_master_playlist_output ../ffout/hls2s/master.m3u8",
+		"hls:dur:6s": "packager input=../ffout/output.mp4,stream=video,init_segment=../ffout/hls6s/video/init.mp4,segment_template=../ffout/hls6s/video/seg_$Number$.m4s,hls_name=v1080,hls_group_id=video input=../ffout/audio/sample_aac128.m4a,stream=audio,init_segment=../ffout/hls6s/audio/init.mp4,segment_template=../ffout/hls6s/audio/seg_$Number$.m4s,hls_name=aac128,hls_group_id=audio --segment_duration 6 --fragment_duration 6 --hls_playlist_type VOD --hls_master_playlist_output ../ffout/hls6s/master.m3u8",
+		"hls:dur:verify": "shx ls -1 ../ffout/hls2s/video/*.m4s | wc -l && shx ls -1 ../ffout/hls6s/video/*.m4s | wc -l && shx head -n 20 ../ffout/hls2s/master.m3u8 && shx head -n 20 ../ffout/hls6s/master.m3u8",
+		"hls:dur:publish": "shx rm -rf public/media/hls2s public/media/hls6s && shx mkdir -p public/media && shx cp -r ../ffout/hls2s public/media/hls2s && shx cp -r ../ffout/hls6s public/media/hls6s"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
