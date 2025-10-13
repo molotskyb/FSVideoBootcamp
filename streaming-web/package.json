@@ -122,7 +122,13 @@
 		"ck:publish": "shx rm -rf public/media/ck && shx mkdir -p public/media/ck && shx cp -r ../ffout/ck/* public/media/ck/",
 		"ck:page": "node -e \"const fs=require('fs');const k=require('../ffout/ck/keys.json');const html=`<!doctype html><meta charset='utf-8'><title>ClearKey Demo</title><style>body{font:14px ui-monospace,monospace;margin:24px}</style><h1>ClearKey Demo</h1><p>Loads /media/ck/stream.mpd with org.w3.clearkey</p><video id=v controls playsinline style='width:100%;max-width:960px;background:#000'></video><script src='https://unpkg.com/dashjs/dist/dash.all.min.js'></script><script>const kid='${k.kid_b64}';const key='${k.key_b64}';const url='/media/ck/stream.mpd';const pData={'org.w3.clearkey':{clearkeys:{[kid]:key}}};const v=document.getElementById('v');const p=dashjs.MediaPlayer().create();p.initialize(v,url,true);p.setProtectionData(pData);</script>`;fs.mkdirSync('public/ck',{recursive:true});fs.writeFileSync('public/ck/index.html',html);console.log('Wrote public/ck/index.html');\"",
 		"ck:verify": "shx ls -lh ../ffout/ck && shx head -n 30 ../ffout/ck/stream.mpd && shx cat ../ffout/ck/keys.json",
-		"ck:all": "yarn ck:clean && yarn ck:gen && yarn ck:package && yarn ck:publish && yarn ck:page"
+		"ck:all": "yarn ck:clean && yarn ck:gen && yarn ck:package && yarn ck:publish && yarn ck:page",
+		"drm:clean": "shx rm -rf ../ffout/drm && shx mkdir -p ../ffout/drm",
+		"drm:keygen": "yarn drm:clean && node -e \"const fs=require('fs');const c=require('crypto');const b=c.randomBytes(16);const k=c.randomBytes(16);const hex=x=>Buffer.from(x).toString('hex');const b64=x=>Buffer.from(x).toString('base64');const toUUID=h=>[h.slice(0,8),h.slice(8,12),h.slice(12,16),h.slice(16,20),h.slice(20)].join('-');const kid_hex=hex(b), key_hex=hex(k);const out={kid_hex,key_hex,kid_b64:b64(b),key_b64:b64(k),kid_uuid:toUUID(kid_hex),created:new Date().toISOString()};fs.writeFileSync('../ffout/drm/keys.json',JSON.stringify(out,null,2));console.log(out);\"",
+		"drm:keyprint": "node -e \"console.log(require('fs').readFileSync('../ffout/drm/keys.json','utf8'))\"",
+		"drm:keyverify": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('../ffout/drm/keys.json','utf8'));const okHex=s=>/^[0-9a-f]{32}$/.test(s);const okB64=s=>/^[A-Za-z0-9+/=]+$/.test(s);const okUUID=s=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s);if(!okHex(d.kid_hex)||!okHex(d.key_hex)||!okB64(d.kid_b64)||!okB64(d.key_b64)||!okUUID(d.kid_uuid))process.exit(1);console.log('OK: keys look valid');\"",
+		"drm:tag": "node -e \"const fs=require('fs');const tag=process.argv[1]||'untitled';const src='../ffout/drm/keys.json';const dst=`../ffout/drm/${tag}.keys.json`;fs.copyFileSync(src,dst);console.log('Wrote',dst);\"",
+		"ck:use:drm": "shx cp ../ffout/drm/keys.json ../ffout/ck/keys.json"
 	},
 	"dependencies": {
 		"dashjs": "^5.0.3",
