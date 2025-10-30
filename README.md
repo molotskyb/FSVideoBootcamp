@@ -109,7 +109,7 @@ yarn review:urls         # List all deployment URLs
 # 1. Clone and install
 git clone https://github.com/yourname/streaming-bootcamp.git
 cd streaming-bootcamp
-npm install
+yarn install
 
 # 2. Generate test content
 yarn mp4:transcode      # Encode source video
