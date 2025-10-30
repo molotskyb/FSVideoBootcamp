@@ -1,3 +1,11 @@
+## 🧑‍💻 Author & Repo
+
+**Created by:** Boris Molotsky  
+**GitHub:** [github.com/molotskyb/FSVideoBootcamp](https://github.com/molotskyb/FSVideoBootcamp)
+
+💬 **Follow for updates:**  
+LinkedIn – [Boris Molotsky](https://www.linkedin.com/in/boris-molotsky)
+
 ## 📦 Scripts by Course Part
 
 ### ✅ Part 1: Encoding & CDN Foundations (Available Now)
