@@ -1,7 +1,7 @@
 // src/components/HLSVideoPlayer.tsx
 import { useEffect, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
-import Hls from "hls.js";
+import Hls, { type HlsConfig } from "hls.js";
 import { useHtml5Metrics } from "../hooks/useHtml5Metrics";
 import MetricsOverlay from "./MetricsOverlay";
 
@@ -10,9 +10,11 @@ type Ctx = { showMetrics: boolean };
 export default function HLSVideoPlayer({
 	src,
 	lowLatencyMode,
+	hlsConfig,
 }: {
 	src: string;
 	lowLatencyMode?: boolean;
+	hlsConfig?: Partial<HlsConfig>;
 }) {
 	// ✅ safe read with default
 	let showMetrics = false;
@@ -35,7 +37,10 @@ export default function HLSVideoPlayer({
 			return;
 		}
 		if (Hls.isSupported()) {
-			const hls = new Hls({ lowLatencyMode: !!lowLatencyMode });
+			const hls = new Hls({
+				lowLatencyMode: !!lowLatencyMode,
+				...hlsConfig,
+			});
 			hls.loadSource(src);
 			hls.attachMedia(video);
 			return () => hls.destroy();
