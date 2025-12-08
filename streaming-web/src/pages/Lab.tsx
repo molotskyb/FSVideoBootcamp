@@ -19,6 +19,8 @@ const PRESETS: Src[] = [
 	{ label: "CRF=23", type: "mp4", url: "/media/crf/crf23.mp4" },
 	{ label: "CBR 2M", type: "mp4", url: "/media/cbr/cbr_2M.mp4" },
 	{ label: "VBR 2-pass", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
+	{ label: "Preset — Ultrafast", type: "mp4", url: "/media/presets/ultrafast.mp4" },
+	{ label: "Preset — Slow", type: "mp4", url: "/media/presets/slow.mp4" },
 	{ label: "Ladder 240p", type: "mp4", url: "/media/ladder/p240.mp4" },
 	{ label: "Ladder 360p", type: "mp4", url: "/media/ladder/p360.mp4" },
 	{ label: "Ladder 480p", type: "mp4", url: "/media/ladder/p480.mp4" },
