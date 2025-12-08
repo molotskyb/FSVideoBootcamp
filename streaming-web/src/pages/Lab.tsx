@@ -19,6 +19,11 @@ const PRESETS: Src[] = [
 	{ label: "CRF=23", type: "mp4", url: "/media/crf/crf23.mp4" },
 	{ label: "CBR 2M", type: "mp4", url: "/media/cbr/cbr_2M.mp4" },
 	{ label: "VBR 2-pass", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
+	{ label: "Ladder 240p", type: "mp4", url: "/media/ladder/p240.mp4" },
+	{ label: "Ladder 360p", type: "mp4", url: "/media/ladder/p360.mp4" },
+	{ label: "Ladder 480p", type: "mp4", url: "/media/ladder/p480.mp4" },
+	{ label: "Ladder 720p", type: "mp4", url: "/media/ladder/p720.mp4" },
+	{ label: "Ladder 1080p", type: "mp4", url: "/media/ladder/p1080.mp4" },
 	{ label: "HLS 2s", type: "hls", url: "/media/hls2s/master.m3u8" },
 	{ label: "HLS 6s", type: "hls", url: "/media/hls6s/master.m3u8" },
 ];
