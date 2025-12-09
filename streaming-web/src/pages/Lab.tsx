@@ -21,6 +21,8 @@ const PRESETS: Src[] = [
 	{ label: "VBR 2-pass", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
 	{ label: "Preset — Ultrafast", type: "mp4", url: "/media/presets/ultrafast.mp4" },
 	{ label: "Preset — Slow", type: "mp4", url: "/media/presets/slow.mp4" },
+	{ label: "Codec — HEVC (5s)", type: "mp4", url: "/media/codecs/hevc_5s.mp4" },
+	{ label: "Codec — AV1 (5s)", type: "mp4", url: "/media/codecs/av1_5s.mp4" },
 	{ label: "Ladder 240p", type: "mp4", url: "/media/ladder/p240.mp4" },
 	{ label: "Ladder 360p", type: "mp4", url: "/media/ladder/p360.mp4" },
 	{ label: "Ladder 480p", type: "mp4", url: "/media/ladder/p480.mp4" },
