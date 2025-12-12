@@ -10,6 +10,11 @@ type Cap = {
 	lang?: string;
 	kind?: "subtitles" | "captions";
 };
+type ThumbCue = { start: number; end: number; file: string };
+
+const THUMBS_VTT_URL = "/media/thumbs_vtt/thumbs.vtt";
+let thumbsPromise: Promise<ThumbCue[] | null> | null = null;
+const THUMBS_PRESET_LABEL = "Thumbnails Demo";
 
 const PRESETS: Src[] = [
 	{ label: "MP4 sample", type: "mp4", url: "/assets/sample.mp4" },
@@ -34,6 +39,7 @@ const PRESETS: Src[] = [
 	{ label: "Ladder 1080p", type: "mp4", url: "/media/ladder/p1080.mp4" },
 	{ label: "HLS 2s", type: "hls", url: "/media/hls2s/master.m3u8" },
 	{ label: "HLS 6s", type: "hls", url: "/media/hls6s/master.m3u8" },
+	{ label: THUMBS_PRESET_LABEL, type: "mp4", url: "/media/output.mp4" },
 ];
 
 const CAPTIONS: Cap[] = [
@@ -46,6 +52,60 @@ const CAPTIONS: Cap[] = [
 	},
 ];
 
+function loadThumbCues(): Promise<ThumbCue[] | null> {
+	if (!thumbsPromise) {
+		thumbsPromise = (async () => {
+			try {
+				const res = await fetch(THUMBS_VTT_URL);
+				if (!res.ok) return null;
+				const text = await res.text();
+				const cues: ThumbCue[] = [];
+				for (const block of text.split(/\n\s*\n/)) {
+					const lines = block.trim().split("\n");
+					if (lines.length < 2) continue;
+					const timing = lines[0];
+					const file = lines[lines.length - 1]?.trim();
+					if (!file) continue;
+					const match =
+						timing.match(
+							/(\d+):(\d+):(\d+(?:\.\d+)?)\s+-->\s+(\d+):(\d+):(\d+(?:\.\d+)?)/
+						);
+					if (!match) continue;
+					const start =
+						Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+					const end =
+						Number(match[4]) * 3600 + Number(match[5]) * 60 + Number(match[6]);
+					cues.push({ start, end, file });
+				}
+				return cues;
+			} catch {
+				return null;
+			}
+		})();
+	}
+	return thumbsPromise;
+}
+
+function useThumbCues(enabled: boolean) {
+	const [cues, setCues] = useState<ThumbCue[] | null>(null);
+	useEffect(() => {
+		let active = true;
+		if (!enabled) {
+			setCues(null);
+			return () => {
+				active = false;
+			};
+		}
+		loadThumbCues().then((data) => {
+			if (active) setCues(data);
+		});
+		return () => {
+			active = false;
+		};
+	}, [enabled]);
+	return cues;
+}
+
 async function headSize(url: string): Promise<number | null> {
 	try {
 		const r = await fetch(url, { method: "HEAD" });
@@ -56,12 +116,22 @@ async function headSize(url: string): Promise<number | null> {
 	}
 }
 
-function Player({ src, caption }: { src: Src; caption: Cap }) {
+function Player({
+	src,
+	caption,
+	showThumbPreview,
+}: {
+	src: Src;
+	caption: Cap;
+	showThumbPreview?: boolean;
+}) {
 	const ref = useRef<HTMLVideoElement>(null);
 	const [size, setSize] = useState<number | null>(null);
 	const [avgKbps, setAvgKbps] = useState<number | null>(null);
 	const [bwKbps, setBwKbps] = useState<number | null>(null);
 	const [level, setLevel] = useState<string>("");
+	const thumbCues = useThumbCues(!!showThumbPreview);
+	const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 
 	useEffect(() => {
 		setSize(null);
@@ -120,6 +190,26 @@ function Player({ src, caption }: { src: Src; caption: Cap }) {
 
 	useEffect(() => {
 		const video = ref.current;
+		if (!showThumbPreview || !video || !thumbCues || !thumbCues.length) {
+			setThumbUrl(null);
+			return;
+		}
+		const updateThumb = () => {
+			const t = video.currentTime;
+			const cue = thumbCues.find((c) => t >= c.start && t < c.end);
+			setThumbUrl(cue ? `/media/thumbs_vtt/${cue.file}` : null);
+		};
+		video.addEventListener("timeupdate", updateThumb);
+		video.addEventListener("seeking", updateThumb);
+		updateThumb();
+		return () => {
+			video.removeEventListener("timeupdate", updateThumb);
+			video.removeEventListener("seeking", updateThumb);
+		};
+	}, [thumbCues]);
+
+	useEffect(() => {
+		const video = ref.current;
 		if (!video) return;
 		const syncSubtitle = () => {
 			const tracks = Array.from(
@@ -151,29 +241,54 @@ function Player({ src, caption }: { src: Src; caption: Cap }) {
 				gap: 12,
 			}}
 		>
-			<video
-				ref={ref}
-				controls
-				playsInline
-				style={{
-					width: "100%",
-					height: "auto",
-					borderRadius: 8,
-					backgroundColor: "black",
-				}}
-			>
-				{caption.url ? (
-					<track
-						key={caption.url}
-						kind={caption.kind ?? "subtitles"}
-						src={caption.url}
-						srcLang={caption.lang}
-						label={caption.label}
-						data-lab-track="true"
-						default
-					/>
+			<div style={{ position: "relative" }}>
+				<video
+					ref={ref}
+					controls
+					playsInline
+					style={{
+						width: "100%",
+						height: "auto",
+						borderRadius: 8,
+						backgroundColor: "black",
+					}}
+				>
+					{caption.url ? (
+						<track
+							key={caption.url}
+							kind={caption.kind ?? "subtitles"}
+							src={caption.url}
+							srcLang={caption.lang}
+							label={caption.label}
+							data-lab-track="true"
+							default
+						/>
+					) : null}
+				</video>
+				{showThumbPreview && thumbUrl ? (
+					<div
+						style={{
+							position: "absolute",
+							bottom: 12,
+							left: 12,
+							background: "rgba(0,0,0,0.7)",
+							padding: 4,
+							borderRadius: 4,
+						}}
+					>
+						<img
+							src={thumbUrl}
+							alt="thumbnail"
+							style={{
+								width: 120,
+								height: "auto",
+								display: "block",
+								borderRadius: 2,
+							}}
+						/>
+					</div>
 				) : null}
-			</video>
+			</div>
 			<div
 				style={{
 					display: "flex",
@@ -274,8 +389,16 @@ export default function Lab() {
 					gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
 				}}
 			>
-				<Player src={a} caption={capA} />
-				<Player src={b} caption={capB} />
+				<Player
+					src={a}
+					caption={capA}
+					showThumbPreview={a.label === THUMBS_PRESET_LABEL}
+				/>
+				<Player
+					src={b}
+					caption={capB}
+					showThumbPreview={b.label === THUMBS_PRESET_LABEL}
+				/>
 			</div>
 		</div>
 	);
