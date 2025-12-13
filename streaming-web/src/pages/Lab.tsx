@@ -26,12 +26,24 @@ const PRESETS: Src[] = [
 	{ label: "CRF=23", type: "mp4", url: "/media/crf/crf23.mp4" },
 	{ label: "CBR 2M", type: "mp4", url: "/media/cbr/cbr_2M.mp4" },
 	{ label: "VBR 2-pass", type: "mp4", url: "/media/vbr/vbr_2pass_2M.mp4" },
-	{ label: "Preset — Ultrafast", type: "mp4", url: "/media/presets/ultrafast.mp4" },
+	{
+		label: "Preset — Ultrafast",
+		type: "mp4",
+		url: "/media/presets/ultrafast.mp4",
+	},
 	{ label: "Preset — Slow", type: "mp4", url: "/media/presets/slow.mp4" },
 	{ label: "Codec — HEVC (5s)", type: "mp4", url: "/media/codecs/hevc_5s.mp4" },
 	{ label: "Codec — AV1 (5s)", type: "mp4", url: "/media/codecs/av1_5s.mp4" },
-	{ label: "Audio — AAC (m4a)", type: "mp4", url: "/media/audio/sample_aac128.m4a" },
-	{ label: "Audio — AAC (mp4)", type: "mp4", url: "/media/audio/sample_aac128.mp4" },
+	{
+		label: "Audio — AAC (m4a)",
+		type: "mp4",
+		url: "/media/audio/sample_aac128.m4a",
+	},
+	{
+		label: "Audio — AAC (mp4)",
+		type: "mp4",
+		url: "/media/audio/sample_aac128.mp4",
+	},
 	{ label: "Ladder 240p", type: "mp4", url: "/media/ladder/p240.mp4" },
 	{ label: "Ladder 360p", type: "mp4", url: "/media/ladder/p360.mp4" },
 	{ label: "Ladder 480p", type: "mp4", url: "/media/ladder/p480.mp4" },
@@ -66,10 +78,9 @@ function loadThumbCues(): Promise<ThumbCue[] | null> {
 					const timing = lines[0];
 					const file = lines[lines.length - 1]?.trim();
 					if (!file) continue;
-					const match =
-						timing.match(
-							/(\d+):(\d+):(\d+(?:\.\d+)?)\s+-->\s+(\d+):(\d+):(\d+(?:\.\d+)?)/
-						);
+					const match = timing.match(
+						/(\d+):(\d+):(\d+(?:\.\d+)?)\s+-->\s+(\d+):(\d+):(\d+(?:\.\d+)?)/
+					);
 					if (!match) continue;
 					const start =
 						Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
@@ -132,6 +143,7 @@ function Player({
 	const [level, setLevel] = useState<string>("");
 	const thumbCues = useThumbCues(!!showThumbPreview);
 	const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+	const [thumbLeft, setThumbLeft] = useState(0);
 
 	useEffect(() => {
 		setSize(null);
@@ -192,12 +204,16 @@ function Player({
 		const video = ref.current;
 		if (!showThumbPreview || !video || !thumbCues || !thumbCues.length) {
 			setThumbUrl(null);
+			setThumbLeft(0);
 			return;
 		}
 		const updateThumb = () => {
 			const t = video.currentTime;
 			const cue = thumbCues.find((c) => t >= c.start && t < c.end);
 			setThumbUrl(cue ? `/media/thumbs_vtt/${cue.file}` : null);
+			const duration = video.duration || 0;
+			const progress = duration ? Math.min(Math.max(t / duration, 0), 1) : 0;
+			setThumbLeft(progress);
 		};
 		video.addEventListener("timeupdate", updateThumb);
 		video.addEventListener("seeking", updateThumb);
@@ -269,11 +285,13 @@ function Player({
 					<div
 						style={{
 							position: "absolute",
-							bottom: 12,
-							left: 12,
+							bottom: 72,
+							left: `${thumbLeft * 100}%`,
 							background: "rgba(0,0,0,0.7)",
 							padding: 4,
 							borderRadius: 4,
+							transform: "translate(-50%, 0)",
+							pointerEvents: "none",
 						}}
 					>
 						<img
