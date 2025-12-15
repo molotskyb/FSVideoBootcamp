@@ -426,13 +426,20 @@ export default function Lab() {
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-					gap: 16,
+					gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+					gap: 20,
+					alignItems: "start",
 				}}
 			>
-				<div style={{ display: "grid", gap: 12 }}>
-					<label>
-						Left source{" "}
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "1fr 1fr",
+						gap: 16,
+					}}
+				>
+					<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+						<span>Left source</span>
 						<select
 							value={PRESETS.indexOf(a)}
 							onChange={(e) => setA(PRESETS[+e.target.value])}
@@ -440,8 +447,8 @@ export default function Lab() {
 							{options}
 						</select>
 					</label>
-					<label>
-						Left subtitles
+					<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+						<span>Left subtitles</span>
 						<select
 							value={CAPTIONS.indexOf(capA)}
 							onChange={(e) => setCapA(CAPTIONS[+e.target.value])}
@@ -450,9 +457,15 @@ export default function Lab() {
 						</select>
 					</label>
 				</div>
-				<div style={{ display: "grid", gap: 12 }}>
-					<label>
-						Right source
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "1fr 1fr",
+						gap: 16,
+					}}
+				>
+					<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+						<span>Right source</span>
 						<select
 							value={PRESETS.indexOf(b)}
 							onChange={(e) => setB(PRESETS[+e.target.value])}
@@ -460,8 +473,8 @@ export default function Lab() {
 							{options}
 						</select>
 					</label>
-					<label>
-						Right subtitles
+					<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+						<span>Right subtitles</span>
 						<select
 							value={CAPTIONS.indexOf(capB)}
 							onChange={(e) => setCapB(CAPTIONS[+e.target.value])}
