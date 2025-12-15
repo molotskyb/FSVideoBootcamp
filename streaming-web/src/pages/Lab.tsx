@@ -9,12 +9,15 @@ type Cap = {
 	url: string | null;
 	lang?: string;
 	kind?: "subtitles" | "captions";
+	mode?: "segments";
+	segmentTemplate?: string;
 };
 type ThumbCue = { start: number; end: number; file: string };
 
 const THUMBS_VTT_URL = "/media/thumbs_vtt/thumbs.vtt";
 let thumbsPromise: Promise<ThumbCue[] | null> | null = null;
 const THUMBS_PRESET_LABEL = "Thumbnails Demo";
+const SEGMENT_FETCH_LIMIT = 200;
 
 const PRESETS: Src[] = [
 	{ label: "MP4 sample", type: "mp4", url: "/assets/sample.mp4" },
@@ -57,10 +60,26 @@ const PRESETS: Src[] = [
 const CAPTIONS: Cap[] = [
 	{ label: "None", url: null },
 	{
-		label: "English (VTT)",
+		label: "English — Captions (VTT)",
 		url: "/media/captions/en.vtt",
 		lang: "en",
 		kind: "subtitles",
+	},
+	{
+		label: "English — HLS subs (packager)",
+		url: "/media/hls_subs/master_subs.m3u8",
+		lang: "en",
+		kind: "subtitles",
+		mode: "segments",
+		segmentTemplate: "/media/hls_subs/sub-$Number$.vtt",
+	},
+	{
+		label: "English — DASH subs (packager)",
+		url: "/media/dash_subs/stream.mpd",
+		lang: "en",
+		kind: "subtitles",
+		mode: "segments",
+		segmentTemplate: "/media/dash_subs/sub-$Number$.vtt",
 	},
 ];
 
@@ -117,6 +136,25 @@ function useThumbCues(enabled: boolean) {
 	return cues;
 }
 
+async function buildSegmentedVtt(template: string): Promise<string | null> {
+	let combined = "WEBVTT\n\n";
+	let found = false;
+	for (let i = 1; i <= SEGMENT_FETCH_LIMIT; i++) {
+		const relUrl = template.replace("$Number$", String(i));
+		const absUrl = new URL(relUrl, window.location.origin).toString();
+		const res = await fetch(absUrl);
+		if (!res.ok) {
+			if (!found) return null;
+			break;
+		}
+		let text = await res.text();
+		found = true;
+		text = text.replace(/^WEBVTT\s*/i, "").trim();
+		if (text) combined += `${text}\n\n`;
+	}
+	return found ? combined : null;
+}
+
 async function headSize(url: string): Promise<number | null> {
 	try {
 		const r = await fetch(url, { method: "HEAD" });
@@ -144,6 +182,7 @@ function Player({
 	const thumbCues = useThumbCues(!!showThumbPreview);
 	const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 	const [thumbLeft, setThumbLeft] = useState(0);
+	const [resolvedCaptionUrl, setResolvedCaptionUrl] = useState<string | null>(null);
 
 	useEffect(() => {
 		setSize(null);
@@ -225,6 +264,35 @@ function Player({
 	}, [thumbCues]);
 
 	useEffect(() => {
+		let cancelled = false;
+		let objectUrl: string | null = null;
+		const resolve = async () => {
+			setResolvedCaptionUrl(null);
+			if (!caption?.url) {
+				setResolvedCaptionUrl(null);
+				return;
+			}
+			if (caption.mode === "segments" && caption.segmentTemplate) {
+				const combined = await buildSegmentedVtt(caption.segmentTemplate);
+				if (!combined) {
+					setResolvedCaptionUrl(null);
+					return;
+				}
+				const blob = new Blob([combined], { type: "text/vtt" });
+				objectUrl = URL.createObjectURL(blob);
+				if (!cancelled) setResolvedCaptionUrl(objectUrl);
+				return;
+			}
+			setResolvedCaptionUrl(caption.url);
+		};
+		resolve();
+		return () => {
+			cancelled = true;
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
+		};
+	}, [caption]);
+
+	useEffect(() => {
 		const video = ref.current;
 		if (!video) return;
 		const syncSubtitle = () => {
@@ -269,11 +337,11 @@ function Player({
 						backgroundColor: "black",
 					}}
 				>
-					{caption.url ? (
+					{resolvedCaptionUrl ? (
 						<track
-							key={caption.url}
+							key={resolvedCaptionUrl}
 							kind={caption.kind ?? "subtitles"}
-							src={caption.url}
+							src={resolvedCaptionUrl}
 							srcLang={caption.lang}
 							label={caption.label}
 							data-lab-track="true"
@@ -346,7 +414,7 @@ export default function Lab() {
 	const captionOptions = useMemo(
 		() =>
 			CAPTIONS.map((c, i) => (
-				<option key={i} value={i}>
+				<option key={i} value={i} disabled={!!c.disabled}>
 					{c.label}
 				</option>
 			)),
@@ -358,46 +426,50 @@ export default function Lab() {
 			<div
 				style={{
 					display: "grid",
-					gap: 12,
-					gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+					gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+					gap: 16,
 				}}
 			>
-				<label>
-					Left source{" "}
-					<select
-						value={PRESETS.indexOf(a)}
-						onChange={(e) => setA(PRESETS[+e.target.value])}
-					>
-						{options}
-					</select>
-				</label>
-				<label>
-					Left subtitles
-					<select
-						value={CAPTIONS.indexOf(capA)}
-						onChange={(e) => setCapA(CAPTIONS[+e.target.value])}
-					>
-						{captionOptions}
-					</select>
-				</label>
-				<label>
-					Right source
-					<select
-						value={PRESETS.indexOf(b)}
-						onChange={(e) => setB(PRESETS[+e.target.value])}
-					>
-						{options}
-					</select>
-				</label>
-				<label>
-					Right subtitles
-					<select
-						value={CAPTIONS.indexOf(capB)}
-						onChange={(e) => setCapB(CAPTIONS[+e.target.value])}
-					>
-						{captionOptions}
-					</select>
-				</label>
+				<div style={{ display: "grid", gap: 12 }}>
+					<label>
+						Left source{" "}
+						<select
+							value={PRESETS.indexOf(a)}
+							onChange={(e) => setA(PRESETS[+e.target.value])}
+						>
+							{options}
+						</select>
+					</label>
+					<label>
+						Left subtitles
+						<select
+							value={CAPTIONS.indexOf(capA)}
+							onChange={(e) => setCapA(CAPTIONS[+e.target.value])}
+						>
+							{captionOptions}
+						</select>
+					</label>
+				</div>
+				<div style={{ display: "grid", gap: 12 }}>
+					<label>
+						Right source
+						<select
+							value={PRESETS.indexOf(b)}
+							onChange={(e) => setB(PRESETS[+e.target.value])}
+						>
+							{options}
+						</select>
+					</label>
+					<label>
+						Right subtitles
+						<select
+							value={CAPTIONS.indexOf(capB)}
+							onChange={(e) => setCapB(CAPTIONS[+e.target.value])}
+						>
+							{captionOptions}
+						</select>
+					</label>
+				</div>
 			</div>
 			<div
 				style={{
