@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
 import * as dashjs from "dashjs";
 
-type Src = { label: string; type: "mp4" | "hls" | "dash"; url: string };
+type Src = {
+	label: string;
+	type: "mp4" | "hls" | "dash";
+	url: string;
+	thumbVtt?: string;
+};
 type Cap = {
 	label: string;
 	url: string | null;
@@ -14,10 +19,11 @@ type Cap = {
 };
 type ThumbCue = { start: number; end: number; file: string };
 
-const THUMBS_VTT_URL = "/media/thumbs_vtt/thumbs.vtt";
-let thumbsPromise: Promise<ThumbCue[] | null> | null = null;
-const THUMBS_PRESET_LABEL = "Thumbnails Demo";
+const thumbCache = new Map<string, Promise<ThumbCue[] | null>>();
+const DEFAULT_THUMBS_VTT = "/media/thumbs_vtt/thumbs.vtt";
 const SEGMENT_FETCH_LIMIT = 200;
+
+const CAPSTONE_BASE = "/media/capstone";
 
 const PRESETS: Src[] = [
 	{ label: "MP4 sample", type: "mp4", url: "/assets/sample.mp4" },
@@ -54,7 +60,63 @@ const PRESETS: Src[] = [
 	{ label: "Ladder 1080p", type: "mp4", url: "/media/ladder/p1080.mp4" },
 	{ label: "HLS 2s", type: "hls", url: "/media/hls2s/master.m3u8" },
 	{ label: "HLS 6s", type: "hls", url: "/media/hls6s/master.m3u8" },
-	{ label: THUMBS_PRESET_LABEL, type: "mp4", url: "/media/output.mp4" },
+	{
+		label: "Thumbnails Demo",
+		type: "mp4",
+		url: "/media/output.mp4",
+		thumbVtt: DEFAULT_THUMBS_VTT,
+	},
+	{
+		label: "Capstone Audio — AAC (m4a)",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/audio/sample_aac128.m4a`,
+	},
+	{
+		label: "Capstone Audio — AAC (mp4)",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/audio/sample_aac128.mp4`,
+	},
+	{
+		label: "Capstone Ladder 240p",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p240.mp4`,
+	},
+	{
+		label: "Capstone Ladder 360p",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p360.mp4`,
+	},
+	{
+		label: "Capstone Ladder 480p",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p480.mp4`,
+	},
+	{
+		label: "Capstone Ladder 720p",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p720.mp4`,
+	},
+	{
+		label: "Capstone Ladder 1080p",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p1080.mp4`,
+	},
+	{
+		label: "Capstone HLS (Packager)",
+		type: "hls",
+		url: `${CAPSTONE_BASE}/hls_sp/master.m3u8`,
+	},
+	{
+		label: "Capstone DASH (Packager)",
+		type: "dash",
+		url: `${CAPSTONE_BASE}/dash_sp/stream.mpd`,
+	},
+	{
+		label: "Capstone Thumbnails Demo",
+		type: "mp4",
+		url: `${CAPSTONE_BASE}/ladder/p720.mp4`,
+		thumbVtt: `${CAPSTONE_BASE}/thumbs_vtt/thumbs.vtt`,
+	},
 ];
 
 const CAPTIONS: Cap[] = [
@@ -81,58 +143,71 @@ const CAPTIONS: Cap[] = [
 		mode: "segments",
 		segmentTemplate: "/media/dash_subs/sub-$Number$.vtt",
 	},
+	{
+		label: "English — Captions (Capstone VTT)",
+		url: `${CAPSTONE_BASE}/captions/en.vtt`,
+		lang: "en",
+		kind: "subtitles",
+	},
 ];
 
-function loadThumbCues(): Promise<ThumbCue[] | null> {
-	if (!thumbsPromise) {
-		thumbsPromise = (async () => {
-			try {
-				const res = await fetch(THUMBS_VTT_URL);
-				if (!res.ok) return null;
-				const text = await res.text();
-				const cues: ThumbCue[] = [];
-				for (const block of text.split(/\n\s*\n/)) {
-					const lines = block.trim().split("\n");
-					if (lines.length < 2) continue;
-					const timing = lines[0];
-					const file = lines[lines.length - 1]?.trim();
-					if (!file) continue;
-					const match = timing.match(
-						/(\d+):(\d+):(\d+(?:\.\d+)?)\s+-->\s+(\d+):(\d+):(\d+(?:\.\d+)?)/
-					);
-					if (!match) continue;
-					const start =
-						Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
-					const end =
-						Number(match[4]) * 3600 + Number(match[5]) * 60 + Number(match[6]);
-					cues.push({ start, end, file });
+function loadThumbCues(vttUrl: string): Promise<ThumbCue[] | null> {
+	if (!thumbCache.has(vttUrl)) {
+		thumbCache.set(
+			vttUrl,
+			(async () => {
+				try {
+					const res = await fetch(vttUrl);
+					if (!res.ok) return null;
+					const text = await res.text();
+					const cues: ThumbCue[] = [];
+					for (const block of text.split(/\n\s*\n/)) {
+						const lines = block.trim().split("\n");
+						if (lines.length < 2) continue;
+						const timing = lines[0];
+						const file = lines[lines.length - 1]?.trim();
+						if (!file) continue;
+						const match = timing.match(
+							/(\d+):(\d+):(\d+(?:\.\d+)?)\s+-->\s+(\d+):(\d+):(\d+(?:\.\d+)?)/
+						);
+						if (!match) continue;
+						const start =
+							Number(match[1]) * 3600 +
+							Number(match[2]) * 60 +
+							Number(match[3]);
+						const end =
+							Number(match[4]) * 3600 +
+							Number(match[5]) * 60 +
+							Number(match[6]);
+						cues.push({ start, end, file });
+					}
+					return cues;
+				} catch {
+					return null;
 				}
-				return cues;
-			} catch {
-				return null;
-			}
-		})();
+			})()
+		);
 	}
-	return thumbsPromise;
+	return thumbCache.get(vttUrl)!;
 }
 
-function useThumbCues(enabled: boolean) {
+function useThumbCues(vttUrl?: string) {
 	const [cues, setCues] = useState<ThumbCue[] | null>(null);
 	useEffect(() => {
 		let active = true;
-		if (!enabled) {
+		if (!vttUrl) {
 			setCues(null);
 			return () => {
 				active = false;
 			};
 		}
-		loadThumbCues().then((data) => {
+		loadThumbCues(vttUrl).then((data) => {
 			if (active) setCues(data);
 		});
 		return () => {
 			active = false;
 		};
-	}, [enabled]);
+	}, [vttUrl]);
 	return cues;
 }
 
@@ -165,21 +240,14 @@ async function headSize(url: string): Promise<number | null> {
 	}
 }
 
-function Player({
-	src,
-	caption,
-	showThumbPreview,
-}: {
-	src: Src;
-	caption: Cap;
-	showThumbPreview?: boolean;
-}) {
+function Player({ src, caption }: { src: Src; caption: Cap }) {
 	const ref = useRef<HTMLVideoElement>(null);
 	const [size, setSize] = useState<number | null>(null);
 	const [avgKbps, setAvgKbps] = useState<number | null>(null);
 	const [bwKbps, setBwKbps] = useState<number | null>(null);
 	const [level, setLevel] = useState<string>("");
-	const thumbCues = useThumbCues(!!showThumbPreview);
+	const enableThumbs = !!src.thumbVtt;
+	const thumbCues = useThumbCues(src.thumbVtt);
 	const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 	const [thumbLeft, setThumbLeft] = useState(0);
 	const [resolvedCaptionUrl, setResolvedCaptionUrl] = useState<string | null>(
@@ -243,7 +311,7 @@ function Player({
 
 	useEffect(() => {
 		const video = ref.current;
-		if (!showThumbPreview || !video || !thumbCues || !thumbCues.length) {
+		if (!enableThumbs || !video || !thumbCues || !thumbCues.length) {
 			setThumbUrl(null);
 			setThumbLeft(0);
 			return;
@@ -351,7 +419,7 @@ function Player({
 						/>
 					) : null}
 				</video>
-				{showThumbPreview && thumbUrl ? (
+				{enableThumbs && thumbUrl ? (
 					<div
 						style={{
 							position: "absolute",
@@ -494,16 +562,8 @@ export default function Lab() {
 					gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
 				}}
 			>
-				<Player
-					src={a}
-					caption={capA}
-					showThumbPreview={a.label === THUMBS_PRESET_LABEL}
-				/>
-				<Player
-					src={b}
-					caption={capB}
-					showThumbPreview={b.label === THUMBS_PRESET_LABEL}
-				/>
+				<Player src={a} caption={capA} />
+				<Player src={b} caption={capB} />
 			</div>
 		</div>
 	);
