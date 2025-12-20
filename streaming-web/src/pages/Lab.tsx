@@ -182,7 +182,9 @@ function Player({
 	const thumbCues = useThumbCues(!!showThumbPreview);
 	const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 	const [thumbLeft, setThumbLeft] = useState(0);
-	const [resolvedCaptionUrl, setResolvedCaptionUrl] = useState<string | null>(null);
+	const [resolvedCaptionUrl, setResolvedCaptionUrl] = useState<string | null>(
+		null
+	);
 
 	useEffect(() => {
 		setSize(null);
@@ -414,7 +416,7 @@ export default function Lab() {
 	const captionOptions = useMemo(
 		() =>
 			CAPTIONS.map((c, i) => (
-				<option key={i} value={i} disabled={!!c.disabled}>
+				<option key={i} value={i}>
 					{c.label}
 				</option>
 			)),
