@@ -1,4 +1,7 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:03.000
-Sample caption track
+00:00:00.000 --> 00:00:02.000
+Hello world.
+
+00:00:02.000 --> 00:00:05.000
+This is a caption demo.
