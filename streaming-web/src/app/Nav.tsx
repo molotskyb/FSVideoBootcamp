@@ -20,7 +20,9 @@ export default function Nav() {
 		["/hls-drm", "HLS DRM (FPS)"],
 		["/ll-hls", "LL-HLS"],
 		["/mp4", "MP4"],
+		["/auth/stream", "Auth Stream"],
 		["/lab", "Lab"],
+		["/qoe", "QoE"],
 	] as const;
 
 	return (

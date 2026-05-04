@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Nav from "./Nav";
 import "./Layout.css";
 
+const logoSrc = `${import.meta.env.BASE_URL}assets/logo.png`;
+
 export default function Layout() {
 	const [showMetrics, setShowMetrics] = useState(true);
 
@@ -17,7 +19,7 @@ export default function Layout() {
 	return (
 		<>
 			<img
-				src="../assets/logo.png"
+				src={logoSrc}
 				alt="logo"
 				style={{
 					position: "fixed",
