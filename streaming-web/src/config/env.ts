@@ -19,7 +19,11 @@ export const ENV = {
 	// MP4
 	MP4:
 		import.meta.env.VITE_MP4 ||
-		"https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+		"https://vjs.zencdn.net/v/oceans.mp4",
+	MP4_FALLBACKS: [
+		"https://media.w3.org/2010/05/bunny/movie.mp4",
+		"https://www.w3schools.com/html/mov_bbb.mp4",
+	],
 
 	// DRM endpoints (WV/PR for DASH; FPS for HLS Safari)
 	WV: import.meta.env.VITE_WV || "https://cwip-shaka-proxy.appspot.com/no_auth",

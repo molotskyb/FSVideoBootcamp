@@ -26,6 +26,7 @@ type Props = {
 	tracks?: TextTrackSource[];
 	autoSelectFirstSubtitle?: boolean;
 	lowLatency?: boolean; // for LL-DASH
+	onError?: (err: unknown) => void;
 };
 
 type LayoutCtx = { showMetrics: boolean };
@@ -36,6 +37,7 @@ export default function VideoPlayer({
 	tracks,
 	autoSelectFirstSubtitle,
 	lowLatency,
+	onError,
 }: Props) {
 	// Read <Outlet context>; default to true (teaching HUD always visible).
 	let showMetrics = true;
@@ -61,6 +63,10 @@ export default function VideoPlayer({
 	);
 
 	const overlayMetrics = player ? dashMetrics : html5Metrics;
+
+	useEffect(() => {
+		if (error) onError?.(error);
+	}, [error, onError]);
 
 	// Auto-show first side-loaded subtitle track (MP4/native only; DASH text is handled by dash.js)
 	useEffect(() => {
