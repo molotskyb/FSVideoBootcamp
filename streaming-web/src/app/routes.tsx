@@ -14,6 +14,10 @@ const LowLatencyDash = React.lazy(() => import("../pages/LowLatencyDash"));
 const Lab = React.lazy(() => import("../pages/Lab"));
 const Qoe = React.lazy(() => import("../pages/Qoe"));
 const AuthStream = React.lazy(() => import("../pages/AuthStream"));
+const EmeProbe = React.lazy(() => import("../pages/EmeProbe"));
+const ClearKeyDemo = React.lazy(() => import("../pages/ClearKeyDemo"));
+const LicenseFlow = React.lazy(() => import("../pages/LicenseFlow"));
+const WidevineDemo = React.lazy(() => import("../pages/WidevineDemo"));
 
 const routes: RouteObject[] = [
 	{
@@ -32,6 +36,10 @@ const routes: RouteObject[] = [
 			{ path: "lab", element: React.createElement(Lab) },
 			{ path: "qoe", element: React.createElement(Qoe) },
 			{ path: "auth/stream", element: React.createElement(AuthStream) },
+			{ path: "eme", element: React.createElement(EmeProbe) },
+			{ path: "clearkey", element: React.createElement(ClearKeyDemo) },
+			{ path: "license-flow", element: React.createElement(LicenseFlow) },
+			{ path: "widevine-dev", element: React.createElement(WidevineDemo) },
 			{ path: "captions-dash", element: React.createElement(CaptionsDash) },
 			{ path: "ll-hls", element: React.createElement(LowLatencyHls) },
 			{ path: "ll-dash", element: React.createElement(LowLatencyDash) },

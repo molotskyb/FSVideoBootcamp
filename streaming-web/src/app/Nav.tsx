@@ -21,6 +21,10 @@ export default function Nav() {
 		["/ll-hls", "LL-HLS"],
 		["/mp4", "MP4"],
 		["/auth/stream", "Auth Stream"],
+		["/eme", "EME Probe"],
+		["/clearkey", "ClearKey"],
+		["/license-flow", "License Flow"],
+		["/widevine-dev", "Widevine Dev"],
 		["/lab", "Lab"],
 		["/qoe", "QoE"],
 	] as const;
